@@ -1,5 +1,24 @@
 return {
-  { "diegoulloao/neofusion.nvim", priority = 1000, config = true, opts = ... },
+  {
+    "baliestri/aura-theme",
+    lazy = false,
+    priority = 1000,
+    config = function(plugin)
+      vim.opt.rtp:append(plugin.dir .. "/packages/neovim")
+      -- vim.cmd([[colorscheme aura-dark]])
+    end,
+  },
+  {
+    "getomni/neovim",
+    lazy = false,
+  },
+  {
+    "olimorris/onedarkpro.nvim",
+    priority = 1000, -- Ensure it loads first
+    config = function()
+      -- vim.cmd.colorscheme("onedark_dark")
+    end,
+  },
   {
     "folke/tokyonight.nvim",
     priority = 1000,
@@ -42,7 +61,7 @@ return {
         end,
       })
 
-      vim.cmd("colorscheme tokyonight")
+      -- vim.cmd("colorscheme tokyonight")
     end,
   },
   {
@@ -53,6 +72,13 @@ return {
       -- load the colorscheme here
       require("night-owl").setup()
       vim.cmd.colorscheme("night-owl")
+    end,
+  },
+  { "diegoulloao/neofusion.nvim", priority = 1000, config = true, opts = ... },
+  {
+    "nyoom-engineering/oxocarbon.nvim",
+    config = function()
+      vim.cmd.colorscheme("oxocarbon")
     end,
   },
 }
