@@ -70,15 +70,22 @@ return {
     priority = 1000, -- make sure to load this before all the other start plugins
     config = function()
       -- load the colorscheme here
-      require("night-owl").setup()
-      vim.cmd.colorscheme("night-owl")
+      -- require("night-owl").setup()
+      -- vim.cmd.colorscheme("night-owl")
     end,
   },
   { "diegoulloao/neofusion.nvim", priority = 1000, config = true, opts = ... },
   {
     "nyoom-engineering/oxocarbon.nvim",
     config = function()
-      vim.cmd.colorscheme("oxocarbon")
+      -- vim.cmd.colorscheme("oxocarbon")
+    end,
+  },
+
+  {
+    "EdenEast/nightfox.nvim",
+    config = function()
+      vim.cmd("colorscheme carbonfox")
     end,
   },
 }
