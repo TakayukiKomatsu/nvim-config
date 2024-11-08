@@ -5,7 +5,7 @@ return {
     local lualine = require("lualine")
     local lazy_status = require("lazy.status") -- to configure lazy pending updates count
 
-    vim.cmd("colorscheme carbonfox")
+    vim.cmd("colorscheme witch-dark")
 
     -- local colors = {
     --   blue = "#65D1FF",

@@ -114,6 +114,16 @@ return {
           filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
         })
       end,
+      ["zls"] = function()
+        -- Configure Zig Language Server (ZLS)
+        lspconfig["zls"].setup({
+          capabilities = capabilities,
+          filetypes = { "zig" }, -- Specify the filetype for Zig
+          on_attach = function(client, bufnr)
+            -- Additional settings or mappings specific to Zig can go here
+          end,
+        })
+      end,
       ["lua_ls"] = function()
         -- configure lua server (with special settings)
         lspconfig["lua_ls"].setup({
