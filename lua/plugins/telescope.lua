@@ -78,5 +78,25 @@ return {
       local builtin = require("telescope.builtin")
       builtin.diagnostics()
     end, { desc = "Lists open buffers" })
+
+    keymap.set("n", "<leader>fi", function()
+      local builtin = require("telescope.builtin")
+      builtin.lsp_implementations()
+    end, { desc = "Search for implementations" })
+
+    keymap.set("n", "<leader>fT", function()
+      local builtin = require("telescope.builtin")
+      builtin.lsp_type_definitions()
+    end, { desc = "Search for type_definitions" })
+
+    keymap.set("n", "<leader>fS", function()
+      local builtin = require("telescope.builtin")
+      builtin.lsp_dynamic_workspace_symbols()
+    end, { desc = "Search for type_definitions" })
+
+    keymap.set("n", "<leader>fs", function()
+      local builtin = require("telescope.builtin")
+      builtin.lsp_document_symbols()
+    end, { desc = "Search for lsp_document_symbols" })
   end,
 }
