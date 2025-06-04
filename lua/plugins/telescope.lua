@@ -94,7 +94,7 @@ return {
       builtin.lsp_dynamic_workspace_symbols()
     end, { desc = "Search for type_definitions" })
 
-    keymap.set("n", "<leader>fs", function()
+    keymap.set("n", "<leader>fa", function()
       local builtin = require("telescope.builtin")
       builtin.lsp_document_symbols()
     end, { desc = "Search for lsp_document_symbols" })
