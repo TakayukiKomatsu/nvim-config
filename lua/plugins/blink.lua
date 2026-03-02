@@ -8,7 +8,7 @@ return {
   },
   opts = function(_, opts)
     opts.sources = vim.tbl_deep_extend("force", opts.sources or {}, {
-      default = { "lsp", "path", "snippets", "buffer", "copilot", "emoji" },
+      default = { "lsp", "path", "snippets", "buffer", "emoji" },
       providers = {
         lsp = {
           name = "lsp",
@@ -87,16 +87,55 @@ return {
 
     opts.completion = {
       menu = {
-        border = "single",
+        border = "rounded",
+        winblend = 0,
+        winhighlight = "Normal:BlinkCmpMenu,FloatBorder:BlinkCmpMenuBorder,CursorLine:BlinkCmpMenuSelection,Search:None",
+        scrollbar = true,
+        -- Auto-show completion menu
+        auto_show = function(ctx)
+          return ctx.mode ~= "cmdline" and vim.bo.buftype ~= "prompt"
+        end,
+        -- Draw completion menu with Mac-friendly design
+        draw = {
+          columns = { { "kind_icon" }, { "label", "label_description", gap = 1 }, { "kind" } },
+          components = {
+            kind_icon = {
+              ellipsis = false,
+              text = function(ctx)
+                return ctx.kind_icon .. ctx.icon_gap
+              end,
+              highlight = function(ctx)
+                return "BlinkCmpKind" .. ctx.kind
+              end,
+            },
+          },
+        },
       },
       documentation = {
         auto_show = true,
+        auto_show_delay_ms = 200,
+        update_delay_ms = 50,
         window = {
-          border = "single",
+          border = "rounded",
+          winblend = 0,
+          winhighlight = "Normal:BlinkCmpDoc,FloatBorder:BlinkCmpDocBorder,CursorLine:BlinkCmpDocCursorLine,Search:None",
+          scrollbar = true,
+          max_width = 80,
+          max_height = 20,
         },
       },
       ghost_text = {
         enabled = true,
+      },
+    }
+
+    -- Signature help configuration (shows function parameters while typing)
+    opts.signature = {
+      enabled = true,
+      window = {
+        border = "rounded",
+        winblend = 0,
+        winhighlight = "Normal:BlinkCmpSignatureHelp,FloatBorder:BlinkCmpSignatureHelpBorder",
       },
     }
 
@@ -117,20 +156,75 @@ return {
     }
     opts.keymap = {
       preset = "default",
-      ["<Tab>"] = { "snippet_forward", "fallback" },
+
+      -- Smart Tab behavior: accept if selected, otherwise snippet forward
+      ["<Tab>"] = {
+        function(cmp)
+          if cmp.snippet_active() then
+            return cmp.snippet_forward()
+          else
+            return cmp.select_and_accept()
+          end
+        end,
+        "snippet_forward",
+        "fallback",
+      },
       ["<S-Tab>"] = { "snippet_backward", "fallback" },
 
+      -- Item selection (use Ctrl - avoids conflict with window nav <A-j/k>)
       ["<Up>"] = { "select_prev", "fallback" },
       ["<Down>"] = { "select_next", "fallback" },
       ["<C-p>"] = { "select_prev", "fallback" },
       ["<C-n>"] = { "select_next", "fallback" },
 
-      ["<S-k>"] = { "scroll_documentation_up", "fallback" },
-      ["<S-j>"] = { "scroll_documentation_down", "fallback" },
+      -- Documentation scrolling (use Ctrl - avoids conflict with page scroll <A-u/d>)
+      ["<C-b>"] = { "scroll_documentation_up", "fallback" },
+      ["<C-f>"] = { "scroll_documentation_down", "fallback" },
 
+      -- Accept completion
+      ["<CR>"] = { "accept", "fallback" },
+
+      -- Show/hide completion and documentation
       ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
       ["<C-e>"] = { "hide", "fallback" },
+      ["<A-space>"] = { "show", "show_documentation", "hide_documentation" },
+      ["<Esc>"] = { "hide", "fallback" },
     }
+
+    -- Appearance customization
+    opts.appearance = {
+      use_nvim_cmp_as_default = false,
+      nerd_font_variant = "mono",
+      kind_icons = {
+        Text = "󰉿",
+        Method = "󰊕",
+        Function = "󰊕",
+        Constructor = "󰒓",
+        Field = "󰜢",
+        Variable = "󰆦",
+        Class = "󰠱",
+        Interface = "󰠱",
+        Module = "󰅩",
+        Property = "󰖷",
+        Unit = "󰪚",
+        Value = "󰦨",
+        Enum = "󰦨",
+        Keyword = "󰻾",
+        Snippet = "󰩫",
+        Color = "󰏘",
+        File = "󰈔",
+        Reference = "󰬲",
+        Folder = "󰉋",
+        EnumMember = "󰦨",
+        Constant = "󰏿",
+        Struct = "󰠱",
+        Event = "󱐋",
+        Operator = "󰪚",
+        TypeParameter = "󰬛",
+        Emoji = "󰞅",
+      },
+    }
+
     return opts
   end,
 }

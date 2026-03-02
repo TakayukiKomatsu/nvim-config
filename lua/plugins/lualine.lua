@@ -1,69 +1,109 @@
 return {
   "nvim-lualine/lualine.nvim",
-  dependencies = { "nvim-tree/nvim-web-devicons" },
+  dependencies = { "nvim-tree/nvim-web-devicons", "SmiteshP/nvim-navic" },
   config = function()
     local lualine = require("lualine")
     local lazy_status = require("lazy.status") -- to configure lazy pending updates count
 
-    vim.cmd("colorscheme duskfox")
-
-    -- local colors = {
-    --   blue = "#65D1FF",
-    --   green = "#3EFFDC",
-    --   violet = "#FF61EF",
-    --   yellow = "#FFDA7B",
-    --   red = "#FF4A4A",
-    --   fg = "#c3ccdc",
-    --   bg = "#112638",
-    --   inactive_bg = "#2c3043",
-    -- }
-    --
-    -- local my_lualine_theme = {
-    --   normal = {
-    --     a = { bg = colors.blue, fg = colors.bg, gui = "bold" },
-    --     b = { bg = colors.bg, fg = colors.fg },
-    --     c = { bg = colors.bg, fg = colors.fg },
-    --   },
-    --   insert = {
-    --     a = { bg = colors.green, fg = colors.bg, gui = "bold" },
-    --     b = { bg = colors.bg, fg = colors.fg },
-    --     c = { bg = colors.bg, fg = colors.fg },
-    --   },
-    --   visual = {
-    --     a = { bg = colors.violet, fg = colors.bg, gui = "bold" },
-    --     b = { bg = colors.bg, fg = colors.fg },
-    --     c = { bg = colors.bg, fg = colors.fg },
-    --   },
-    --   command = {
-    --     a = { bg = colors.yellow, fg = colors.bg, gui = "bold" },
-    --     b = { bg = colors.bg, fg = colors.fg },
-    --     c = { bg = colors.bg, fg = colors.fg },
-    --   },
-    --   replace = {
-    --     a = { bg = colors.red, fg = colors.bg, gui = "bold" },
-    --     b = { bg = colors.bg, fg = colors.fg },
-    --     c = { bg = colors.bg, fg = colors.fg },
-    --   },
-    --   inactive = {
-    --     a = { bg = colors.inactive_bg, fg = colors.semilightgray, gui = "bold" },
-    --     b = { bg = colors.inactive_bg, fg = colors.semilightgray },
-    --     c = { bg = colors.inactive_bg, fg = colors.semilightgray },
-    --   },
-    -- }
-    --
-    -- configure lualine with modified theme
     lualine.setup({
+      options = {
+        theme = "auto", -- Auto-detect from colorscheme
+        component_separators = { left = "|", right = "|" },
+        section_separators = { left = "", right = "" },
+        globalstatus = true, -- Single statusline for all windows
+        refresh = {
+          statusline = 1000,
+          tabline = 1000,
+          winbar = 1000,
+        },
+      },
       sections = {
+        lualine_a = { "mode" },
+        lualine_b = {
+          "branch",
+          "diff",
+          {
+            "diagnostics",
+            sources = { "nvim_lsp", "nvim_diagnostic" },
+            symbols = { error = " ", warn = " ", info = " ", hint = " " },
+          },
+        },
+        lualine_c = {
+          {
+            "filename",
+            path = 1, -- 0: Just filename, 1: Relative path, 2: Absolute path
+            shorting_target = 40,
+            symbols = {
+              modified = " ●",
+              readonly = " ",
+              unnamed = "[No Name]",
+            },
+          },
+          {
+            function()
+              local navic = require("nvim-navic")
+              if navic.is_available() then
+                return navic.get_location()
+              end
+              return ""
+            end,
+            cond = function()
+              local ok, navic = pcall(require, "nvim-navic")
+              return ok and navic.is_available()
+            end,
+            color = { fg = "#ff9e64" },
+          },
+        },
         lualine_x = {
           {
             lazy_status.updates,
             cond = lazy_status.has_updates,
             color = { fg = "#ff9e64" },
           },
+          {
+            -- Show LSP server name
+            function()
+              local buf_clients = vim.lsp.get_clients({ bufnr = 0 })
+              if #buf_clients == 0 then
+                return ""
+              end
+
+              local buf_client_names = {}
+              for _, client in pairs(buf_clients) do
+                if client.name ~= "copilot" then
+                  table.insert(buf_client_names, client.name)
+                end
+              end
+
+              if #buf_client_names > 0 then
+                return "[" .. table.concat(buf_client_names, ", ") .. "]"
+              end
+              return ""
+            end,
+            icon = " LSP:",
+            color = { fg = "#61afef" },
+          },
           { "encoding" },
-          { "fileformat" },
+          {
+            "fileformat",
+            symbols = {
+              unix = "LF",
+              dos = "CRLF",
+              mac = "CR",
+            },
+          },
           { "filetype" },
         },
+        lualine_y = { "progress" },
+        lualine_z = { "location" },
+      },
+      inactive_sections = {
+        lualine_a = {},
+        lualine_b = {},
+        lualine_c = { "filename" },
+        lualine_x = { "location" },
+        lualine_y = {},
+        lualine_z = {},
       },
     })
   end,

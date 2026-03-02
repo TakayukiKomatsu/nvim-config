@@ -9,9 +9,18 @@ return {
         vim.keymap.set(mode, l, r, { buffer = bufnr, desc = desc })
       end
 
-      -- Navigation
-      map("n", "]h", gs.next_hunk, "Next Hunk")
-      map("n", "[h", gs.prev_hunk, "Prev Hunk")
+      -- Navigation (diff-aware: use ]c/[c in diff mode)
+      vim.keymap.set("n", "]h", function()
+        if vim.wo.diff then return "]c" end
+        vim.schedule(function() gs.next_hunk() end)
+        return "<Ignore>"
+      end, { buffer = bufnr, expr = true, desc = "Next git hunk" })
+
+      vim.keymap.set("n", "[h", function()
+        if vim.wo.diff then return "[c" end
+        vim.schedule(function() gs.prev_hunk() end)
+        return "<Ignore>"
+      end, { buffer = bufnr, expr = true, desc = "Prev git hunk" })
 
       -- Actions
       map("n", "<leader>hs", gs.stage_hunk, "Stage hunk")

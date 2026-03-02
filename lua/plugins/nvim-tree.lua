@@ -9,6 +9,10 @@ return {
     vim.g.loaded_netrwPlugin = 1
 
     nvimtree.setup({
+      hijack_directories = {
+        enable = true,   -- open nvim-tree instead of netrw when opening a directory
+        auto_open = true,
+      },
       view = {
         width = 35,
         side = "right",
