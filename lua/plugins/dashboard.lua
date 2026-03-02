@@ -8,6 +8,7 @@ return {
       scope  = { enabled = false }, -- hlchunk.nvim handles scope brackets
       words  = { enabled = false }, -- vim-illuminate handles word highlighting
       scroll = { enabled = false }, -- no smooth scroll desired
+      input = { enabled = false }, -- using dressing.nvim for vim.ui.input
       dashboard = {
         preset = {
           header = "",

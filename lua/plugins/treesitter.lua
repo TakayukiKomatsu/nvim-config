@@ -33,6 +33,7 @@ return {
         "dockerfile",
         "gitignore",
         "query",
+        "regex",
         "c",
         "python",
         "go",

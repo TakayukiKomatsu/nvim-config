@@ -48,12 +48,6 @@ return {
     { "\\", function()
       require("telescope.builtin").buffers()
     end, desc = "Lists open buffers" },
-    { ";;", function()
-      require("telescope.builtin").resume()
-    end, desc = "Resume last search" },
-    { ";e", function()
-      require("telescope.builtin").diagnostics()
-    end, desc = "Diagnostics" },
     { "<A-p>", "<cmd>Telescope find_files<cr>", desc = "Quick open file (⌥P)" },
     { "<A-r>", function()
       require("telescope.builtin").oldfiles({ prompt_title = "📁 Recent Files", cwd_only = true })
@@ -166,16 +160,6 @@ return {
 
     -- Only keymaps not already covered by the `keys` spec above
     local keymap = vim.keymap
-
-    -- Double-backslash buffer list (keys spec has single \)
-    keymap.set("n", "\\\\", function()
-      require("telescope.builtin").buffers()
-    end, { desc = "Lists open buffers" })
-
-    -- Document symbols via ; prefix (;e = diagnostics, ;s = symbols)
-    keymap.set("n", ";s", function()
-      require("telescope.builtin").lsp_document_symbols()
-    end, { desc = "Document symbols (LSP)" })
 
     -- Visual mode: search selected text
     keymap.set("v", "<leader>fs", function()
