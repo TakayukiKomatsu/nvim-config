@@ -1,7 +1,7 @@
 return {
-  "williamboman/mason.nvim",
+  "mason-org/mason.nvim",
   dependencies = {
-    "williamboman/mason-lspconfig.nvim",
+    "mason-org/mason-lspconfig.nvim",
     "WhoIsSethDaniel/mason-tool-installer.nvim",
   },
   config = function()
@@ -27,27 +27,60 @@ return {
     mason_lspconfig.setup({
       -- list of servers for mason to install
       ensure_installed = {
-        "tsserver",
+        -- TypeScript/JavaScript
+        "eslint", -- ESLint language server
+
+        -- Web
         "html",
         "cssls",
         "tailwindcss",
-        "svelte",
-        "lua_ls",
-        "graphql",
         "emmet_ls",
+        "graphql",
         "prismals",
-        "pyright",
+
+        -- Go
+        "gopls", -- Go language server
+
+        -- Python
+        "pyright", -- Python language server
+        "ruff", -- Fast Python linter/formatter (replaces black, isort, pylint)
+
+        -- Lua
+        "lua_ls",
+
+        -- Rust handled by rustaceanvim (rust-analyzer)
       },
+      automatic_enable = false,
     })
 
     mason_tool_installer.setup({
+      run_on_start = true,
+      auto_update = true,
+      start_delay = 3000,
+      debounce_hours = 24,
       ensure_installed = {
-        "prettier", -- prettier formatter
+        -- JavaScript/TypeScript
+        "prettierd", -- faster prettier formatter
+        "prettier", -- prettier formatter fallback
+        "eslint_d", -- faster eslint
+
+        -- Lua
         "stylua", -- lua formatter
-        "isort", -- python formatter
-        "black", -- python formatter
-        "pylint",
-        "eslint_d",
+
+        -- Python
+        "mypy", -- type checker
+        "ruff", -- formatter/linter for python
+
+        -- Go
+        "gofumpt", -- stricter gofmt
+        "goimports", -- auto imports
+        "golangci-lint", -- linter
+        "delve", -- debugger
+
+        -- Java
+        "google-java-format", -- java formatter for conform
+
+        -- Rust (rust-analyzer installed via rustup, not mason)
       },
     })
   end,

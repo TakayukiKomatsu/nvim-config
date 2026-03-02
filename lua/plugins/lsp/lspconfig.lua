@@ -2,9 +2,7 @@ return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
-    "hrsh7th/cmp-nvim-lsp",
     { "antosha417/nvim-lsp-file-operations", config = true },
-    { "folke/neodev.nvim", opts = {} },
   },
   config = function()
     -- import lspconfig plugin
@@ -12,9 +10,7 @@ return {
 
     -- import mason_lspconfig plugin
     local mason_lspconfig = require("mason-lspconfig")
-
-    -- import cmp-nvim-lsp plugin
-    local cmp_nvim_lsp = require("cmp_nvim_lsp")
+    local lspconfig_configs = require("lspconfig.configs")
 
     local keymap = vim.keymap -- for conciseness
 
@@ -26,8 +22,11 @@ return {
         local opts = { buffer = ev.buf, silent = true }
 
         -- set keybinds
-        opts.desc = "Show LSP references"
-        keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show definition, references
+        opts.desc = "Show LSP references (Telescope)"
+        keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show references in Telescope
+
+        opts.desc = "LSP references (quickfix)"
+        keymap.set("n", "gr", vim.lsp.buf.references, opts) -- show references in quickfix
 
         opts.desc = "Go to declaration"
         keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
@@ -54,10 +53,14 @@ return {
         keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
 
         opts.desc = "Go to previous diagnostic"
-        keymap.set("n", "[d", vim.diagnostic.goto_prev, opts) -- jump to previous diagnostic in buffer
+        keymap.set("n", "[d", function()
+          vim.diagnostic.jump({ count = -1, float = true })
+        end, opts) -- jump to previous diagnostic in buffer
 
         opts.desc = "Go to next diagnostic"
-        keymap.set("n", "]d", vim.diagnostic.goto_next, opts) -- jump to next diagnostic in buffer
+        keymap.set("n", "]d", function()
+          vim.diagnostic.jump({ count = 1, float = true })
+        end, opts) -- jump to next diagnostic in buffer
 
         opts.desc = "Show documentation for what is under cursor"
         keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
@@ -68,7 +71,7 @@ return {
     })
 
     -- used to enable autocompletion (assign to every lsp server config)
-    local capabilities = cmp_nvim_lsp.default_capabilities()
+    local capabilities = require("blink.cmp").get_lsp_capabilities()
 
     -- Change the Diagnostic symbols in the sign column (gutter)
     -- (not in youtube nvim video)
@@ -78,54 +81,91 @@ return {
       vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
     end
 
-    mason_lspconfig.setup_handlers({
-      -- default handler for installed servers
-      function(server_name)
-        lspconfig[server_name].setup({
+    local server_overrides = {
+      -- Gopls with better settings
+      gopls = function()
+        lspconfig["gopls"].setup({
           capabilities = capabilities,
+          settings = {
+            gopls = {
+              gofumpt = true,
+              codelenses = {
+                gc_details = false,
+                generate = true,
+                regenerate_cgo = true,
+                run_govulncheck = true,
+                test = true,
+                tidy = true,
+                upgrade_dependency = true,
+                vendor = true,
+              },
+              hints = {
+                assignVariableTypes = true,
+                compositeLiteralFields = true,
+                compositeLiteralTypes = true,
+                constantValues = true,
+                functionTypeParameters = true,
+                parameterNames = true,
+                rangeVariableTypes = true,
+              },
+              analyses = {
+                fieldalignment = true,
+                nilness = true,
+                unusedparams = true,
+                unusedwrite = true,
+                useany = true,
+              },
+              usePlaceholders = true,
+              completeUnimported = true,
+              staticcheck = true,
+              directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
+              semanticTokens = true,
+            },
+          },
         })
       end,
-      ["svelte"] = function()
-        -- configure svelte server
-        lspconfig["svelte"].setup({
+
+      -- Ruff (Python) - fast linter/formatter
+      ruff = function()
+        lspconfig["ruff"].setup({
           capabilities = capabilities,
-          on_attach = function(client, bufnr)
-            vim.api.nvim_create_autocmd("BufWritePost", {
-              pattern = { "*.js", "*.ts" },
-              callback = function(ctx)
-                -- Here use ctx.match instead of ctx.file
-                client.notify("$/onDidChangeTsOrJsFile", { uri = ctx.match })
-              end,
-            })
-          end,
+          init_options = {
+            settings = {
+              args = {},
+            },
+          },
         })
       end,
-      ["graphql"] = function()
-        -- configure graphql language server
+
+      -- configure graphql language server
+      graphql = function()
         lspconfig["graphql"].setup({
           capabilities = capabilities,
-          filetypes = { "graphql", "gql", "svelte", "typescriptreact", "javascriptreact" },
+          filetypes = { "graphql", "gql", "typescriptreact", "javascriptreact" },
         })
       end,
-      ["emmet_ls"] = function()
-        -- configure emmet language server
+
+      -- configure emmet language server
+      emmet_ls = function()
         lspconfig["emmet_ls"].setup({
           capabilities = capabilities,
-          filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less", "svelte" },
+          filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
         })
       end,
-      ["zls"] = function()
-        -- Configure Zig Language Server (ZLS)
+
+      -- Configure Zig Language Server (ZLS)
+      zls = function()
         lspconfig["zls"].setup({
           capabilities = capabilities,
-          filetypes = { "zig" }, -- Specify the filetype for Zig
-          on_attach = function(client, bufnr)
-            -- Additional settings or mappings specific to Zig can go here
-          end,
+          filetypes = { "zig" },
         })
       end,
-      ["lua_ls"] = function()
-        -- configure lua server (with special settings)
+
+      -- Disabled: typescript-tools.nvim handles TypeScript/JavaScript LSP
+      vtsls = function() end,
+
+      -- configure lua server (with special settings)
+      lua_ls = function()
         lspconfig["lua_ls"].setup({
           capabilities = capabilities,
           settings = {
@@ -141,6 +181,35 @@ return {
           },
         })
       end,
-    })
+    }
+
+    local function setup_server(server_name)
+      local override = server_overrides[server_name]
+      if override then
+        override()
+        return
+      end
+
+      -- mason-lspconfig can map tools that aren't available as nvim-lspconfig configs (e.g. stylua)
+      if not lspconfig_configs[server_name] then
+        return
+      end
+
+      local server = lspconfig[server_name]
+      if not server then
+        vim.schedule(function()
+          vim.notify("LSP server config not found: " .. server_name, vim.log.levels.WARN)
+        end)
+        return
+      end
+
+      server.setup({
+        capabilities = capabilities,
+      })
+    end
+
+    for _, server_name in ipairs(mason_lspconfig.get_installed_servers()) do
+      setup_server(server_name)
+    end
   end,
 }
