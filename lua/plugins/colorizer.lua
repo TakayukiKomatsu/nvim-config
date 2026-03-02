@@ -6,34 +6,36 @@ return {
     opts = {
       filetypes = {
         "*", -- Highlight all files, but customize some others.
-        css = { rgb_fn = true }, -- Enable parsing rgb(...) functions in css.
-        scss = { rgb_fn = true },
-        sass = { rgb_fn = true },
-        html = { names = false }, -- Disable parsing "names" like Blue or gray
+        css = { parsers = { rgb = { enable = true } } }, -- Enable rgb(...) functions in css.
+        scss = { parsers = { rgb = { enable = true } } },
+        sass = { parsers = { rgb = { enable = true } } },
+        html = { parsers = { names = { enable = false } } }, -- Disable parsing "names" like Blue or gray
         "!lazy", -- Exclude lazy.nvim UI
       },
-      user_default_options = {
-        RGB = true, -- #RGB hex codes
-        RRGGBB = true, -- #RRGGBB hex codes
-        names = false, -- "Name" codes like Blue or red (can be noisy)
-        RRGGBBAA = true, -- #RRGGBBAA hex codes
-        AARRGGBB = true, -- 0xAARRGGBB hex codes
-        rgb_fn = false, -- CSS rgb() and rgba() functions
-        hsl_fn = false, -- CSS hsl() and hsla() functions
-        css = false, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
-        css_fn = false, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-        -- Available modes for `mode`: foreground, background,  virtualtext
-        mode = "background", -- Set the display mode (Mac-friendly: background highlights)
-        -- Available methods are false / true / "normal" / "lsp" / "both"
-        tailwind = true, -- Enable tailwind colors (e.g., bg-blue-500)
-        sass = { enable = true, parsers = { "css" } }, -- Enable sass colors
-        virtualtext = "■", -- Character to show in virtual text mode
-        -- update color values even if buffer is not focused
+      options = {
+        parsers = {
+          names = { enable = false }, -- "Name" codes like Blue or red (can be noisy)
+          hex = {
+            rgb = true, -- #RGB
+            rrggbb = true, -- #RRGGBB
+            rrggbbaa = true, -- #RRGGBBAA
+            aarrggbb = true, -- 0xAARRGGBB
+          },
+          rgb = { enable = false }, -- CSS rgb() and rgba() functions
+          hsl = { enable = false }, -- CSS hsl() and hsla() functions
+          tailwind = { enable = true }, -- Tailwind colors (e.g., bg-blue-500)
+          sass = { enable = true, parsers = { css = true } }, -- Sass variables/colors
+        },
+        display = {
+          mode = "background", -- Available: background, foreground, virtualtext
+          virtualtext = {
+            char = "■",
+          },
+        },
         always_update = false,
       },
       -- all the sub-options of filetypes apply to buftypes
       buftypes = {},
-      suppress_deprecation = true,
     },
     keys = {
       {
