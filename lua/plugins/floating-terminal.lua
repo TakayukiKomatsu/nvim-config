@@ -8,7 +8,6 @@ return {
       { "<leader>T", "<cmd>ToggleTerm<cr>", desc = "Toggle terminal" },
     },
     opts = {
-      open_mapping = [[<A-`>]],
       direction = "float",
       shade_filetypes = {},
       hide_numbers = true,

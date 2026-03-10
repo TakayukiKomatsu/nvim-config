@@ -3,7 +3,7 @@ return {
   {
     "mrcjkb/rustaceanvim",
     version = "^5",
-    lazy = false,
+    ft = { "rust" },
     init = function()
       vim.g.rustaceanvim = {
         tools = {
@@ -29,11 +29,12 @@ return {
                 loadOutDirsFromCheck = true,
                 runBuildScripts = true,
               },
-              checkOnSave = {
+              check = {
                 allFeatures = true,
                 command = "clippy",
                 extraArgs = { "--no-deps" },
               },
+              checkOnSave = true,
               procMacro = {
                 enable = true,
                 ignored = {
@@ -56,6 +57,7 @@ return {
     opts = {
       completion = {
         cmp = { enabled = false },
+        blink = { enabled = true },
       },
     },
     keys = {

@@ -70,9 +70,7 @@ return {
 
               local buf_client_names = {}
               for _, client in pairs(buf_clients) do
-                if client.name ~= "copilot" then
-                  table.insert(buf_client_names, client.name)
-                end
+                table.insert(buf_client_names, client.name)
               end
 
               if #buf_client_names > 0 then

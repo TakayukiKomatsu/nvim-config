@@ -2,6 +2,9 @@
 return {
   {
     "folke/snacks.nvim",
+    keys = {
+      { "<leader>lg", function() Snacks.lazygit() end, desc = "LazyGit" },
+    },
     opts = {
       -- Disable features handled by dedicated plugins
       indent = { enabled = false }, -- hlchunk.nvim handles indent guides
@@ -24,7 +27,7 @@ return {
             end },
             { icon = " ", key = "t", desc = "Find Todos", action = ":TodoTelescope" },
             { icon = " ", key = "k", desc = "Keymaps", action = ":Telescope keymaps" },
-            { icon = " ", key = "G", desc = "LazyGit", action = ":LazyGit" },
+            { icon = " ", key = "G", desc = "LazyGit", action = function() Snacks.lazygit() end },
             { icon = " ", key = "m", desc = "Mason (LSP)", action = ":Mason" },
             { icon = " ", key = "c", desc = "Config", action = ":e $MYVIMRC | cd %:p:h" },
             { icon = "󰒲 ", key = "l", desc = "Lazy", action = ":Lazy" },

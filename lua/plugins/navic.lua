@@ -5,6 +5,7 @@ return {
   init = function()
     vim.g.navic_silence = true
     vim.api.nvim_create_autocmd("LspAttach", {
+      group = vim.api.nvim_create_augroup("NavicAttach", { clear = true }),
       callback = function(args)
         local buffer = args.buf
         local client = vim.lsp.get_client_by_id(args.data.client_id)

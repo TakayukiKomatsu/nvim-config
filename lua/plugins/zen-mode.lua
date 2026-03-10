@@ -32,7 +32,7 @@ return {
       twilight = { enabled = true },
       gitsigns = { enabled = false },
       tmux = { enabled = true },
-      kitty = { enabled = true, font = "+4" },
+      kitty = { enabled = false },
     },
     on_open = function(win)
       vim.wo.wrap = true

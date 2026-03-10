@@ -55,7 +55,7 @@ return {
 
     mason_tool_installer.setup({
       run_on_start = true,
-      auto_update = true,
+      auto_update = false,
       start_delay = 3000,
       debounce_hours = 24,
       ensure_installed = {
@@ -69,7 +69,6 @@ return {
 
         -- Python
         "mypy", -- type checker
-        "ruff", -- formatter/linter for python
 
         -- Go
         "gofumpt", -- stricter gofmt

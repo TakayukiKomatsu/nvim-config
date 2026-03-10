@@ -2,8 +2,6 @@
 -- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 -- Note: Mac-specific settings are in mac-options.lua (loaded via init.lua)
 
-vim.cmd("let g:netrw_liststyle = 3")
-
 local opt = vim.opt
 
 -- Line numbers
