@@ -1,3 +1,14 @@
+-- Delete the highlighted buffer inside any Telescope buffer picker
+local function delete_buf(prompt_bufnr)
+  local action_state = require("telescope.actions.state")
+  local current_picker = action_state.get_current_picker(prompt_bufnr)
+  local entry = action_state.get_selected_entry()
+  if not entry then return end
+  local bufnr = entry.bufnr
+  Snacks.bufdelete(bufnr)
+  current_picker:delete_selection(function(e) return e.bufnr == bufnr end)
+end
+
 return {
   "nvim-telescope/telescope.nvim",
   branch = "0.1.x",
@@ -46,14 +57,54 @@ return {
       require("telescope.builtin").lsp_document_symbols()
     end, desc = "Search document symbols" },
     { "\\", function()
-      require("telescope.builtin").buffers()
+      require("telescope.builtin").buffers({
+        sort_mru = true,
+        ignore_current_buffer = true,
+        attach_mappings = function(_, map)
+          map("n", "dd", delete_buf)
+          map("i", "<C-d>", delete_buf)
+          return true
+        end,
+      })
     end, desc = "Lists open buffers" },
+    { "<leader>fb", function()
+      require("telescope.builtin").buffers({
+        prompt_title = "Buffers",
+        sort_mru = true,
+        ignore_current_buffer = true,
+        attach_mappings = function(_, map)
+          map("n", "dd", delete_buf)
+          map("i", "<C-d>", delete_buf)
+          return true
+        end,
+      })
+    end, desc = "Buffers" },
+    { "<leader>fB", function()
+      require("telescope.builtin").buffers({
+        prompt_title = "All Buffers",
+        sort_mru = true,
+        attach_mappings = function(_, map)
+          map("n", "dd", delete_buf)
+          map("i", "<C-d>", delete_buf)
+          return true
+        end,
+      })
+    end, desc = "All buffers" },
     { "<A-p>", "<cmd>Telescope find_files<cr>", desc = "Quick open file (⌥P)" },
     { "<A-r>", function()
       require("telescope.builtin").oldfiles({ prompt_title = "📁 Recent Files", cwd_only = true })
     end, desc = "Recent files (⌥R)" },
     { "<A-e>", function()
-      require("telescope.builtin").buffers({ prompt_title = "📂 Open Buffers", sort_mru = true, ignore_current_buffer = true })
+      require("telescope.builtin").buffers({
+        prompt_title = "📂 Open Buffers",
+        sort_mru = true,
+        ignore_current_buffer = true,
+        attach_mappings = function(_, map)
+          map("n", "dd", delete_buf)
+          map("i", "<C-d>", delete_buf)
+          return true
+        end,
+      })
     end, desc = "Switch buffer (⌥E)" },
   },
   dependencies = {

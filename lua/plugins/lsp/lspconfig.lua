@@ -10,7 +10,6 @@ return {
 
     -- import mason_lspconfig plugin
     local mason_lspconfig = require("mason-lspconfig")
-    local lspconfig_configs = require("lspconfig.configs")
 
     local keymap = vim.keymap -- for conciseness
 
@@ -125,7 +124,7 @@ return {
         })
       end,
 
-      -- Ruff (Python) - fast linter/formatter
+      -- Ruff (Python) - fast linter/formatter only (no definition/hover/rename)
       ruff = function()
         lspconfig["ruff"].setup({
           capabilities = capabilities,
@@ -134,6 +133,16 @@ return {
               args = {},
             },
           },
+          on_attach = function(client)
+            -- Ruff handles linting/formatting only; defer navigation to pyright
+            client.server_capabilities.hoverProvider = false
+            client.server_capabilities.definitionProvider = false
+            client.server_capabilities.referencesProvider = false
+            client.server_capabilities.renameProvider = false
+            client.server_capabilities.declarationProvider = false
+            client.server_capabilities.implementationProvider = false
+            client.server_capabilities.typeDefinitionProvider = false
+          end,
         })
       end,
 
@@ -190,20 +199,7 @@ return {
         return
       end
 
-      -- mason-lspconfig can map tools that aren't available as nvim-lspconfig configs (e.g. stylua)
-      if not lspconfig_configs[server_name] then
-        return
-      end
-
-      local server = lspconfig[server_name]
-      if not server then
-        vim.schedule(function()
-          vim.notify("LSP server config not found: " .. server_name, vim.log.levels.WARN)
-        end)
-        return
-      end
-
-      server.setup({
+      lspconfig[server_name].setup({
         capabilities = capabilities,
       })
     end

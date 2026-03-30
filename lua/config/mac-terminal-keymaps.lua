@@ -21,7 +21,7 @@ keymap.set("v", "<A-s>", "<ESC><cmd>w<CR>gv", { desc = "Save (⌥S)" })
 keymap.set("n", "<leader>q", "<cmd>q<CR>", { desc = "Quit" })
 keymap.set("n", "<leader>Q", "<cmd>qa!<CR>", { desc = "Quit all without saving" })
 keymap.set("n", "<A-q>", "<cmd>q<CR>", { desc = "Quit (⌥Q)" })
-keymap.set("n", "<A-w>", "<cmd>bd<CR>", { desc = "Close buffer (⌥W)" })
+keymap.set("n", "<A-w>", function() Snacks.bufdelete() end, { desc = "Close buffer (⌥W)" })
 -- Safe paste (terminal-friendly): temporarily enable paste, paste from "+, then restore
 keymap.set("n", "<A-P>", function()
   local prev = vim.o.paste
