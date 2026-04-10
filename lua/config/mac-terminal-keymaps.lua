@@ -21,7 +21,9 @@ keymap.set("v", "<A-s>", "<ESC><cmd>w<CR>gv", { desc = "Save (⌥S)" })
 keymap.set("n", "<leader>q", "<cmd>q<CR>", { desc = "Quit" })
 keymap.set("n", "<leader>Q", "<cmd>qa!<CR>", { desc = "Quit all without saving" })
 keymap.set("n", "<A-q>", "<cmd>q<CR>", { desc = "Quit (⌥Q)" })
-keymap.set("n", "<A-w>", function() Snacks.bufdelete() end, { desc = "Close buffer (⌥W)" })
+keymap.set("n", "<A-w>", function()
+  require("mini.bufremove").delete(0, false)
+end, { desc = "Close buffer (⌥W)" })
 -- Safe paste (terminal-friendly): temporarily enable paste, paste from "+, then restore
 keymap.set("n", "<A-P>", function()
   local prev = vim.o.paste
@@ -43,7 +45,6 @@ keymap.set("n", "<leader>bD", ":%bd<CR>", { desc = "Delete all buffers" })
 -- Half-page scrolling with Option
 keymap.set("n", "<A-d>", "<C-d>zz", { desc = "Half page down (⌥D)" })
 keymap.set("n", "<A-u>", "<C-u>zz", { desc = "Half page up (⌥U)" })
-keymap.set("n", "<A-f>", "<C-f>zz", { desc = "Full page down (⌥F)" })
 keymap.set("n", "<A-b>", "<C-b>zz", { desc = "Full page up (⌥B)" })
 
 -- Word navigation (Mac-style)
@@ -172,6 +173,10 @@ keymap.set("n", "<leader>P", "<cmd>Telescope commands<cr>", { desc = "Command pa
 -- File explorers:
 --   <leader>e  = NvimTree (tree view, lua/plugins/nvim-tree.lua)
 keymap.set("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle NvimTree (right)" })
+keymap.set("n", "<leader>ee", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle NvimTree (right)" })
+keymap.set("n", "<leader>ef", "<cmd>NvimTreeFindFileToggle<CR>", { desc = "Find file in NvimTree" })
+keymap.set("n", "<leader>ec", "<cmd>NvimTreeCollapse<CR>", { desc = "Collapse NvimTree" })
+keymap.set("n", "<leader>er", "<cmd>NvimTreeRefresh<CR>", { desc = "Refresh NvimTree" })
 
 -- Note: Buffer switcher <A-e> is defined in telescope.lua
 -- Note: Recent files <A-r> is defined in telescope.lua

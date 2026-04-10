@@ -7,8 +7,8 @@ return {
     },
     opts = {
       -- Disable features handled by dedicated plugins
-      indent = { enabled = false }, -- hlchunk.nvim handles indent guides
-      scope  = { enabled = false }, -- hlchunk.nvim handles scope brackets
+      indent = { enabled = false }, -- keep Snacks indent guides off
+      scope  = { enabled = false }, -- mini.indentscope handles active scope
       words  = { enabled = false }, -- vim-illuminate handles word highlighting
       scroll = { enabled = false }, -- no smooth scroll desired
       input = { enabled = false }, -- using dressing.nvim for vim.ui.input

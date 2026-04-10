@@ -54,7 +54,7 @@ return {
       conflict = { suffix = "x", options = {} },
       diagnostic = { suffix = "d", options = {} },
       file = { suffix = "f", options = {} },
-      indent = { suffix = "i", options = {} },
+      indent = { suffix = "" }, -- Disabled: mini.indentscope uses [i/]i
       jump = { suffix = "j", options = {} },
       location = { suffix = "l", options = {} },
       oldfile = { suffix = "o", options = {} },
@@ -78,5 +78,162 @@ return {
       replace = { prefix = "" }, -- Disabled (substitute.nvim handles this)
       sort = { prefix = "" }, -- Disabled (gS is Flash treesitter)
     },
+  },
+
+  -- Mini.bufremove - Delete buffers while preserving window layout
+  {
+    "nvim-mini/mini.bufremove",
+    version = false,
+    keys = {
+      {
+        "<leader>bd",
+        function()
+          require("mini.bufremove").delete(0, false)
+        end,
+        desc = "Delete buffer",
+      },
+      {
+        "<leader>bw",
+        function()
+          require("mini.bufremove").wipeout(0, false)
+        end,
+        desc = "Wipeout buffer",
+      },
+    },
+    opts = {
+      silent = true,
+    },
+  },
+
+  -- Mini.clue - Prefix key hints without relying on timeoutlen
+  {
+    "nvim-mini/mini.clue",
+    version = false,
+    event = "VeryLazy",
+    config = function()
+      local miniclue = require("mini.clue")
+
+      miniclue.setup({
+        triggers = {
+          { mode = { "n", "x" }, keys = "<Leader>" },
+          { mode = "n", keys = "[" },
+          { mode = "n", keys = "]" },
+          { mode = { "n", "x" }, keys = "g" },
+          { mode = { "n", "x" }, keys = "'" },
+          { mode = { "n", "x" }, keys = "`" },
+          { mode = { "n", "x" }, keys = '"' },
+          { mode = { "i", "c" }, keys = "<C-r>" },
+          { mode = "n", keys = "<C-w>" },
+          { mode = { "n", "x" }, keys = "z" },
+        },
+        clues = {
+          miniclue.gen_clues.square_brackets(),
+          miniclue.gen_clues.g(),
+          miniclue.gen_clues.marks(),
+          miniclue.gen_clues.registers(),
+          miniclue.gen_clues.windows(),
+          miniclue.gen_clues.z(),
+
+          { mode = "n", keys = "<Leader><Tab>", desc = "+tabs" },
+          { mode = { "n", "x" }, keys = "<Leader>b", desc = "+buffers" },
+          { mode = "n", keys = "<Leader>c", desc = "+code" },
+          { mode = "n", keys = "<Leader>e", desc = "+explorer" },
+          { mode = "n", keys = "<Leader>f", desc = "+find" },
+          { mode = "n", keys = "<Leader>g", desc = "+git" },
+          { mode = "n", keys = "<Leader>j", desc = "+java" },
+          { mode = "n", keys = "<Leader>l", desc = "+lists" },
+          { mode = "n", keys = "<Leader>m", desc = "+edit" },
+          { mode = "n", keys = "<Leader>q", desc = "+quickfix / quit" },
+          { mode = "n", keys = "<Leader>r", desc = "+refactor / rust" },
+          { mode = "n", keys = "<Leader>s", desc = "+search / split" },
+          { mode = "n", keys = "<Leader>t", desc = "+test / tree" },
+          { mode = "n", keys = "<Leader>u", desc = "+ui / utils" },
+          { mode = "n", keys = "<Leader>x", desc = "+trouble" },
+          { mode = "n", keys = "<Leader>z", desc = "+zen" },
+        },
+        window = {
+          delay = 200,
+          config = {
+            border = "rounded",
+            width = "auto",
+          },
+        },
+      })
+    end,
+  },
+
+  -- Mini.trailspace - Highlight and trim trailing whitespace
+  {
+    "nvim-mini/mini.trailspace",
+    version = false,
+    event = { "BufReadPre", "BufNewFile" },
+    keys = {
+      {
+        "<leader>uS",
+        function()
+          MiniTrailspace.trim()
+        end,
+        desc = "Trim trailing whitespace",
+      },
+      {
+        "<leader>uL",
+        function()
+          MiniTrailspace.trim_last_lines()
+        end,
+        desc = "Trim trailing blank lines",
+      },
+    },
+    opts = {
+      only_in_normal_buffers = true,
+    },
+  },
+
+  -- Mini.indentscope - Active indent scope with motions and textobjects
+  {
+    "nvim-mini/mini.indentscope",
+    version = false,
+    event = "LazyFile",
+    opts = function()
+      return {
+        symbol = "│",
+        options = { try_as_border = true },
+        draw = {
+          animation = require("mini.indentscope").gen_animation.none(),
+        },
+      }
+    end,
+    init = function()
+      vim.api.nvim_create_autocmd("FileType", {
+        pattern = {
+          "Trouble",
+          "alpha",
+          "dashboard",
+          "fzf",
+          "help",
+          "lazy",
+          "mason",
+          "neo-tree",
+          "notify",
+          "qf",
+          "sidekick_terminal",
+          "snacks_dashboard",
+          "snacks_notif",
+          "snacks_terminal",
+          "snacks_win",
+          "toggleterm",
+          "trouble",
+        },
+        callback = function()
+          vim.b.miniindentscope_disable = true
+        end,
+      })
+
+      vim.api.nvim_create_autocmd("User", {
+        pattern = "SnacksDashboardOpened",
+        callback = function(data)
+          vim.b[data.buf].miniindentscope_disable = true
+        end,
+      })
+    end,
   },
 }

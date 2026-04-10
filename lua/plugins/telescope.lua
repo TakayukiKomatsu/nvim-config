@@ -3,10 +3,16 @@ local function delete_buf(prompt_bufnr)
   local action_state = require("telescope.actions.state")
   local current_picker = action_state.get_current_picker(prompt_bufnr)
   local entry = action_state.get_selected_entry()
-  if not entry then return end
+  if not entry then
+    return
+  end
   local bufnr = entry.bufnr
-  Snacks.bufdelete(bufnr)
-  current_picker:delete_selection(function(e) return e.bufnr == bufnr end)
+  local ok = require("mini.bufremove").delete(bufnr, false)
+  if ok then
+    current_picker:delete_selection(function(e)
+      return e.bufnr == bufnr
+    end)
+  end
 end
 
 return {
@@ -91,6 +97,7 @@ return {
       })
     end, desc = "All buffers" },
     { "<A-p>", "<cmd>Telescope find_files<cr>", desc = "Quick open file (⌥P)" },
+    { "<A-f>", "<cmd>Telescope live_grep<cr>", desc = "Find in files (⌥F)" },
     { "<A-r>", function()
       require("telescope.builtin").oldfiles({ prompt_title = "📁 Recent Files", cwd_only = true })
     end, desc = "Recent files (⌥R)" },

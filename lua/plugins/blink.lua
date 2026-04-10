@@ -8,7 +8,7 @@ return {
   },
   opts = function(_, opts)
     opts.sources = vim.tbl_deep_extend("force", opts.sources or {}, {
-      default = { "lsp", "path", "snippets", "buffer", "emoji" },
+      default = { "copilot", "lsp", "path", "snippets", "buffer", "emoji" },
       providers = {
         lsp = {
           name = "lsp",
@@ -157,18 +157,8 @@ return {
     opts.keymap = {
       preset = "default",
 
-      -- Smart Tab behavior: accept if selected, otherwise snippet forward
-      ["<Tab>"] = {
-        function(cmp)
-          if cmp.snippet_active() then
-            return cmp.snippet_forward()
-          else
-            return cmp.select_and_accept()
-          end
-        end,
-        "snippet_forward",
-        "fallback",
-      },
+      -- Keep Tab for indentation/snippet jump only; accept with Enter and navigate with arrows
+      ["<Tab>"] = { "snippet_forward", "fallback" },
       ["<S-Tab>"] = { "snippet_backward", "fallback" },
 
       -- Item selection (use Ctrl - avoids conflict with window nav <A-j/k>)

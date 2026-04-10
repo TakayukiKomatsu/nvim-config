@@ -24,7 +24,7 @@ opt.wrap = true
 -- Folding (treesitter-based, no extra plugin needed)
 opt.foldmethod = "expr"
 opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-opt.foldlevel = 99      -- open all folds by default
+opt.foldlevel = 99 -- open all folds by default
 opt.foldlevelstart = 99 -- start every buffer with all folds open
 opt.foldenable = true
 

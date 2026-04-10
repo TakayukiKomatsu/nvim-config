@@ -173,6 +173,9 @@ return {
       -- Disabled: typescript-tools.nvim handles TypeScript/JavaScript LSP
       vtsls = function() end,
 
+      -- nvim-java owns JDTLS setup and lifecycle
+      jdtls = function() end,
+
       -- configure lua server (with special settings)
       lua_ls = function()
         lspconfig["lua_ls"].setup({

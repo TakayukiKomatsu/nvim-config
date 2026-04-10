@@ -1,7 +1,6 @@
 -- Git-conflict - Visual merge conflict resolution
 return {
   "akinsho/git-conflict.nvim",
-  version = "*",
   event = "BufReadPre",
   opts = {
     default_mappings = true, -- Use default mappings
