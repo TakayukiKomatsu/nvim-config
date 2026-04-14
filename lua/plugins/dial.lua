@@ -1,6 +1,7 @@
 -- Dial.nvim - Smart increment/decrement for everything
 return {
   "monaqa/dial.nvim",
+  lazy = true,
   keys = {
     { "<C-a>", function() require("dial.map").manipulate("increment", "normal") end, desc = "Increment" },
     { "<C-x>", function() require("dial.map").manipulate("decrement", "normal") end, desc = "Decrement" },

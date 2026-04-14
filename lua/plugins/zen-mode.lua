@@ -1,6 +1,7 @@
 -- zen-mode: Distraction-free coding
 return {
   "folke/zen-mode.nvim",
+  lazy = true,
   dependencies = { "folke/twilight.nvim" }, -- Dims inactive code
   cmd = "ZenMode",
   keys = {

@@ -1,6 +1,7 @@
 -- Diffview.nvim - Beautiful diff/merge views and file history
 return {
   "sindrets/diffview.nvim",
+  lazy = true,
   dependencies = { "nvim-lua/plenary.nvim" },
   cmd = { "DiffviewOpen", "DiffviewFileHistory", "DiffviewClose" },
   keys = {
