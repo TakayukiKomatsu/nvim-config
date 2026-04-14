@@ -171,9 +171,8 @@ keymap.set("n", "<A-=>", "<C-w>=", { desc = "Equal windows (⌥=)" })
 keymap.set("n", "<leader>P", "<cmd>Telescope commands<cr>", { desc = "Command palette" })
 
 -- File explorers:
---   <leader>e  = NvimTree (tree view, lua/plugins/nvim-tree.lua)
+--   <leader>e  = NvimTree toggle (tree view, lua/plugins/nvim-tree.lua)
 keymap.set("n", "<leader>e", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle NvimTree (right)" })
-keymap.set("n", "<leader>ee", "<cmd>NvimTreeToggle<cr>", { desc = "Toggle NvimTree (right)" })
 keymap.set("n", "<leader>ef", "<cmd>NvimTreeFindFileToggle<CR>", { desc = "Find file in NvimTree" })
 keymap.set("n", "<leader>ec", "<cmd>NvimTreeCollapse<CR>", { desc = "Collapse NvimTree" })
 keymap.set("n", "<leader>er", "<cmd>NvimTreeRefresh<CR>", { desc = "Refresh NvimTree" })
