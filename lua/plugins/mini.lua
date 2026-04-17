@@ -110,11 +110,13 @@ return {
     },
   },
 
-  -- Mini.clue - Prefix key hints without relying on timeoutlen
+  -- Mini.clue - Prefix key hints without relying on timeoutlen.
+  -- Loaded eagerly (no lazy trigger) so the first <Leader> press intercepts instantly;
+  -- it's small and sidesteps the cold-start race where VeryLazy hasn't fired yet.
   {
     "nvim-mini/mini.clue",
     version = false,
-    event = "VeryLazy",
+    lazy = false,
     config = function()
       local miniclue = require("mini.clue")
 
@@ -161,7 +163,7 @@ return {
           { mode = "n", keys = "<Leader>z", desc = "+zen" },
         },
         window = {
-          delay = 200,
+          delay = 0,
           config = {
             border = "rounded",
             width = "auto",
