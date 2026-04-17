@@ -51,14 +51,12 @@ return {
               local ok, navic = pcall(require, "nvim-navic")
               return ok and navic.is_available()
             end,
-            color = { fg = "#ff9e64" },
           },
         },
         lualine_x = {
           {
             lazy_status.updates,
             cond = lazy_status.has_updates,
-            color = { fg = "#ff9e64" },
           },
           {
             -- Show LSP server name
@@ -79,7 +77,6 @@ return {
               return ""
             end,
             icon = " LSP:",
-            color = { fg = "#61afef" },
           },
           { "encoding" },
           {

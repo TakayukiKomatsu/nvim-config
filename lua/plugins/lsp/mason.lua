@@ -54,7 +54,8 @@ return {
     })
 
     mason_tool_installer.setup({
-      run_on_start = true,
+      -- Run `:MasonToolsInstall` on demand; avoid startup I/O
+      run_on_start = false,
       auto_update = false,
       start_delay = 3000,
       debounce_hours = 24,

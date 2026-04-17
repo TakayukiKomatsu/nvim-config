@@ -1,20 +1,27 @@
--- Options are automatically loaded before lazy.nvim startup
--- Default options that are always set: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
--- Note: Mac-specific settings are in mac-options.lua (loaded via init.lua)
+-- Options are automatically loaded before lazy.nvim startup.
+-- LazyVim defaults: https://github.com/LazyVim/LazyVim/blob/main/lua/lazyvim/config/options.lua
 
 local opt = vim.opt
+
+-- Disable netrw early so nvim-tree can hijack directory opens (file explorer is nvim-tree)
+vim.g.loaded_netrw = 1
+vim.g.loaded_netrwPlugin = 1
+
+-- ═══════════════════════════════════════════════════════════════
+-- EDITOR BASICS
+-- ═══════════════════════════════════════════════════════════════
 
 -- Line numbers
 opt.relativenumber = true
 opt.number = true
 
 -- Tabs & indentation
-opt.tabstop = 2 -- 2 spaces for tabs (prettier default)
-opt.shiftwidth = 2 -- 2 spaces for indent width
-opt.expandtab = true -- expand tab to spaces
-opt.autoindent = true -- copy indent from current line when starting new one
+opt.tabstop = 2
+opt.shiftwidth = 2
+opt.expandtab = true
+opt.autoindent = true
 
--- Show tabs as → and trailing spaces as · (helps spot mixed indentation)
+-- Whitespace hints (helps spot mixed indentation)
 opt.list = true
 opt.listchars = { tab = "→ ", lead = "·", trail = "·" }
 
@@ -24,15 +31,79 @@ opt.wrap = true
 -- Folding (treesitter-based, no extra plugin needed)
 opt.foldmethod = "expr"
 opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
-opt.foldlevel = 99 -- open all folds by default
-opt.foldlevelstart = 99 -- start every buffer with all folds open
+opt.foldlevel = 99
+opt.foldlevelstart = 99
 opt.foldenable = true
 
--- Colorscheme
-opt.background = "dark" -- colorschemes that can be light or dark will be made dark
+-- Colorscheme bias
+opt.background = "dark"
 
--- Disable auto format-on-save (use <leader>cf to format manually)
-vim.g.autoformat = false
-
--- Use Telescope as LazyVim's internal picker (instead of fzf-lua auto-detect)
+-- LazyVim behavior
+vim.g.autoformat = false -- format manually via <leader>cf / <A-F>
 vim.g.lazyvim_picker = "telescope"
+
+-- ═══════════════════════════════════════════════════════════════
+-- MAC SYSTEM INTEGRATION
+-- ═══════════════════════════════════════════════════════════════
+
+opt.clipboard:append("unnamedplus") -- system clipboard as default register
+opt.mouse = "a"
+opt.mousescroll = "ver:3,hor:6" -- smooth trackpad scroll
+opt.title = true
+opt.titlestring = "%t - Neovim"
+
+-- ═══════════════════════════════════════════════════════════════
+-- UI
+-- ═══════════════════════════════════════════════════════════════
+
+opt.cursorline = true
+opt.cursorcolumn = false
+opt.termguicolors = true
+opt.signcolumn = "yes"
+opt.pumheight = 10
+opt.pumwidth = 15
+opt.splitbelow = true
+opt.splitright = true
+opt.equalalways = true
+
+-- ═══════════════════════════════════════════════════════════════
+-- KEYBOARD / TIMING
+-- ═══════════════════════════════════════════════════════════════
+
+opt.timeout = true
+opt.timeoutlen = 300
+opt.updatetime = 250
+opt.backspace = "indent,eol,start"
+
+-- ═══════════════════════════════════════════════════════════════
+-- SEARCH / COMPLETION
+-- ═══════════════════════════════════════════════════════════════
+
+opt.ignorecase = true
+opt.smartcase = true
+opt.wildmenu = true
+opt.wildmode = "longest:full,full"
+opt.scrolloff = 8
+opt.sidescrolloff = 8
+
+-- ═══════════════════════════════════════════════════════════════
+-- PERFORMANCE (SSD + Time Machine → no swap/backup needed)
+-- ═══════════════════════════════════════════════════════════════
+
+opt.backup = false
+opt.writebackup = false
+opt.swapfile = false
+opt.undofile = true
+opt.undodir = vim.fn.expand("~/.local/state/nvim/undo")
+
+-- ═══════════════════════════════════════════════════════════════
+-- FILE SYSTEM / IGNORES
+-- ═══════════════════════════════════════════════════════════════
+
+opt.fileformats = "unix,mac,dos"
+opt.wildignore:append({
+  "*.DS_Store",
+  ".Trash/*",
+  "*.localized",
+  "*/.fseventsd/*",
+})

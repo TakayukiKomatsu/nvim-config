@@ -19,29 +19,29 @@ Start here, then go deeper only when needed.
 
 ## Load order
 
-The effective startup flow is:
+LazyVim handles the lifecycle for us:
 
-1. `init.lua`
-2. `lua/config/lazy.lua`
-3. LazyVim core + imported plugin specs
-4. `lua/config/mac-options.lua`
-5. `lua/config/mac-terminal-keymaps.lua`
+1. `init.lua` sets leaders and bootstraps lazy.nvim
+2. `lua/config/lazy.lua` runs `lazy.setup` (imports LazyVim + our `plugins/` tree)
+3. `lua/config/options.lua` loads **before** plugins (pre-plugin options layer)
+4. On `VeryLazy`, LazyVim loads `lua/config/autocmds.lua`, then `lua/config/keymaps.lua`
+5. `lua/config/keymaps.lua` requires each feature module under `lua/config/keymaps/`
 
-That means the **final global UX layer** is the Mac-specific keymap file.
+The **final global UX layer** is therefore the `keymaps/` submodules; plugin `keys = {}` specs still own their own lazy triggers.
 
 ## Where to edit things
 
 | Goal | Primary file(s) |
 |---|---|
-| Change global Mac keymaps | `lua/config/mac-terminal-keymaps.lua` |
-| Change base keymaps | `lua/config/keymaps.lua` |
-| Change options / macOS behavior | `lua/config/options.lua`, `lua/config/mac-options.lua` |
+| Change global keymaps (by feature) | `lua/config/keymaps/{file,navigation,search,editing,window,clipboard,insert,toggle}.lua` |
+| Change options (base + Mac integration) | `lua/config/options.lua` |
+| Change autocommands (incl. Mac-specific) | `lua/config/autocmds.lua` |
 | Add or adjust a plugin | `lua/plugins/*.lua` |
 | Change LSP server setup | `lua/plugins/lsp/mason.lua`, `lua/plugins/lsp/lspconfig.lua` |
 | Change language-specific tooling | `lua/plugins/typescript.lua`, `lua/plugins/java.lua`, `lua/plugins/rust.lua` |
 | Change completion | `lua/plugins/blink.lua` |
-| Change formatting | `lua/plugins/conform.lua` |
-| Change file explorer behavior | `lua/plugins/nvim-tree.lua`, `lua/config/mac-terminal-keymaps.lua` |
+| Change formatting | `lua/plugins/conform.lua` (format keys live here) |
+| Change file explorer behavior | `lua/plugins/nvim-tree.lua` (keys live in the plugin spec) |
 
 For deeper file-by-file ownership notes, see `CLAUDE.md` and `AGENTS.md`.
 
@@ -80,12 +80,12 @@ For deeper reload/debugging notes, see the Development Workflow section in `CLAU
 
 ## Keymap maintenance notes
 
-- `lua/config/mac-terminal-keymaps.lua` is the effective final global keymap layer
-- plugin `keys = {}` definitions still matter for lazy-loaded behavior
+- Global keymaps live under `lua/config/keymaps/` split by feature (file / navigation / search / editing / window / clipboard / insert / toggle)
+- Plugin `keys = {}` definitions still matter for lazy-loaded behavior (format, nvim-tree, telescope, refactoring, rust, dap, …)
 - `lua/plugins/lsp/lspconfig.lua` adds buffer-local LSP mappings
-- the current keymap cleanup intentionally keeps `<leader>e` as the canonical explorer toggle and removes the duplicate `<leader>ee`
+- `lua/plugins/mini.lua` registers the `mini.clue` group labels for `<Leader>*` submenus
 
-If you are changing keymaps, check that audit first — especially around `<leader>e*` and context-sensitive Option-key mappings.
+If you are changing keymaps, grep both `lua/config/keymaps/` and `lua/plugins/*` before adding new bindings.
 
 ## Plugin organization and loading notes
 

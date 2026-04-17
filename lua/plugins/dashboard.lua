@@ -2,9 +2,6 @@
 return {
   {
     "folke/snacks.nvim",
-    keys = {
-      { "<leader>lg", function() Snacks.lazygit() end, desc = "LazyGit" },
-    },
     opts = {
       -- Disable features handled by dedicated plugins
       indent = { enabled = false }, -- keep Snacks indent guides off

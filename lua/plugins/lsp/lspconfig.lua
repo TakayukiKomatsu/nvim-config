@@ -49,7 +49,7 @@ return {
         keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show  diagnostics for file
 
         opts.desc = "Show line diagnostics"
-        keymap.set("n", "<leader>d", vim.diagnostic.open_float, opts) -- show diagnostics for line
+        keymap.set("n", "<leader>cd", vim.diagnostic.open_float, opts) -- show diagnostics for line
 
         opts.desc = "Go to previous diagnostic"
         keymap.set("n", "[d", function()
@@ -66,19 +66,17 @@ return {
 
         opts.desc = "Restart LSP"
         keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
+
+        -- Enable inlay hints for servers that support them (user can toggle with <leader>uI)
+        local client = vim.lsp.get_client_by_id(ev.data.client_id)
+        if client and client.server_capabilities.inlayHintProvider then
+          vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+        end
       end,
     })
 
     -- used to enable autocompletion (assign to every lsp server config)
     local capabilities = require("blink.cmp").get_lsp_capabilities()
-
-    -- Change the Diagnostic symbols in the sign column (gutter)
-    -- (not in youtube nvim video)
-    local signs = { Error = " ", Warn = " ", Hint = "󰠠 ", Info = " " }
-    for type, icon in pairs(signs) do
-      local hl = "DiagnosticSign" .. type
-      vim.fn.sign_define(hl, { text = icon, texthl = hl, numhl = "" })
-    end
 
     local server_overrides = {
       -- Gopls with better settings
@@ -169,9 +167,6 @@ return {
           filetypes = { "zig" },
         })
       end,
-
-      -- Disabled: typescript-tools.nvim handles TypeScript/JavaScript LSP
-      vtsls = function() end,
 
       -- nvim-java owns JDTLS setup and lifecycle
       jdtls = function() end,

@@ -1,3 +1,8 @@
+-- Intentional exception to the one-file-per-plugin rule: this file groups the
+-- `mini.nvim` module family (icons, move, splitjoin, bracketed, operators,
+-- bufremove, clue, trailspace, indentscope). They share an upstream and a
+-- design philosophy, so keeping them together makes the opt-in surface easier
+-- to scan. Do not split unless a single module grows substantially.
 return {
   -- Mini.icons
   {
@@ -137,13 +142,16 @@ return {
           { mode = "n", keys = "<Leader><Tab>", desc = "+tabs" },
           { mode = { "n", "x" }, keys = "<Leader>b", desc = "+buffers" },
           { mode = "n", keys = "<Leader>c", desc = "+code" },
+          { mode = "n", keys = "<Leader>d", desc = "+debug" },
           { mode = "n", keys = "<Leader>e", desc = "+explorer" },
           { mode = "n", keys = "<Leader>f", desc = "+find" },
           { mode = "n", keys = "<Leader>g", desc = "+git" },
+          { mode = "n", keys = "<Leader>h", desc = "+harpoon" },
           { mode = "n", keys = "<Leader>j", desc = "+java" },
           { mode = "n", keys = "<Leader>l", desc = "+lists" },
           { mode = "n", keys = "<Leader>m", desc = "+edit" },
-          { mode = "n", keys = "<Leader>q", desc = "+quit / quickfix" },
+          { mode = "n", keys = "<Leader>n", desc = "+npm" },
+          { mode = "n", keys = "<Leader>q", desc = "+quit / quickfix / session" },
           { mode = "n", keys = "<Leader>r", desc = "+refactor / rust" },
           { mode = "n", keys = "<Leader>s", desc = "+split / search" },
           { mode = "n", keys = "<Leader>t", desc = "+test" },
@@ -220,7 +228,6 @@ return {
           "snacks_notif",
           "snacks_terminal",
           "snacks_win",
-          "toggleterm",
           "trouble",
         },
         callback = function()

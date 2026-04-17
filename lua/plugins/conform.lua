@@ -1,6 +1,20 @@
 return {
   {
     "stevearc/conform.nvim",
+    keys = {
+      {
+        "<leader>cf",
+        function() require("conform").format({ async = true, lsp_fallback = true }) end,
+        mode = { "n", "v" },
+        desc = "Format buffer",
+      },
+      {
+        "<A-F>",
+        function() require("conform").format({ async = true, lsp_fallback = true }) end,
+        mode = { "n", "v" },
+        desc = "Format buffer (⌥F)",
+      },
+    },
     opts = function(_, opts)
       opts.formatters_by_ft = vim.tbl_extend("force", opts.formatters_by_ft or {}, {
         python          = { "ruff_organize_imports", "ruff_format" },

@@ -1,14 +1,43 @@
 return {
   "nvim-tree/nvim-tree.lua",
+  lazy = true,
   dependencies = "nvim-tree/nvim-web-devicons",
+  cmd = {
+    "NvimTreeOpen",
+    "NvimTreeToggle",
+    "NvimTreeFocus",
+    "NvimTreeFindFile",
+    "NvimTreeFindFileToggle",
+    "NvimTreeCollapse",
+    "NvimTreeRefresh",
+  },
+  keys = {
+    { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "Toggle NvimTree (right)" },
+    { "<leader>ef", "<cmd>NvimTreeFindFileToggle<CR>", desc = "Find file in NvimTree" },
+    { "<leader>ec", "<cmd>NvimTreeCollapse<CR>", desc = "Collapse NvimTree" },
+    { "<leader>er", "<cmd>NvimTreeRefresh<CR>", desc = "Refresh NvimTree" },
+    {
+      "<leader>eg",
+      function()
+        require("nvim-tree.api").tree.toggle_gitignore_filter()
+      end,
+      desc = "Toggle git-ignored files (NvimTree)",
+    },
+  },
+  init = function()
+    -- Load nvim-tree at startup only when launched on a directory (hijack_directories handles the rest)
+    vim.api.nvim_create_autocmd("VimEnter", {
+      once = true,
+      callback = function(ev)
+        local path = vim.fn.argv(0)
+        if type(path) == "string" and path ~= "" and vim.fn.isdirectory(path) == 1 then
+          require("lazy").load({ plugins = { "nvim-tree.lua" } })
+        end
+      end,
+    })
+  end,
   config = function()
-    local nvimtree = require("nvim-tree")
-
-    -- recommended settings from nvim-tree documentation
-    vim.g.loaded_netrw = 1
-    vim.g.loaded_netrwPlugin = 1
-
-    nvimtree.setup({
+    require("nvim-tree").setup({
       hijack_directories = {
         enable = true,   -- open nvim-tree instead of netrw when opening a directory
         auto_open = true,

@@ -44,8 +44,8 @@ return {
       -- Install parsers synchronously (only applied to `ensure_installed`)
       sync_install = false,
 
-      -- Automatically install missing parsers when entering buffer
-      auto_install = true,
+      -- Deterministic: grow `ensure_installed` above rather than auto-installing on buffer open
+      auto_install = false,
 
       highlight = {
         enable = true,

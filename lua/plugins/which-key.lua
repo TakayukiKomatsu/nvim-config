@@ -1,13 +1,6 @@
+-- mini.clue owns the prefix-hint UI (see lua/plugins/mini.lua).
+-- which-key is disabled entirely to avoid loading a second unused keymap system.
 return {
   "folke/which-key.nvim",
-  event = "VeryLazy",
-  opts = function(_, opts)
-    -- Keep which-key available for plugins which register mappings via `wk.add()`,
-    -- but let mini.clue handle the interactive prefix UI.
-    opts.triggers = {}
-    opts.notify = false
-    opts.show_help = false
-    opts.show_keys = false
-    return opts
-  end,
+  enabled = false,
 }

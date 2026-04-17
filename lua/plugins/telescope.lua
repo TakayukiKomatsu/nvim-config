@@ -17,10 +17,10 @@ end
 
 return {
   "nvim-telescope/telescope.nvim",
-  branch = "0.1.x",
   lazy = true,
   cmd = "Telescope",
   keys = {
+    { "<leader>P", "<cmd>Telescope commands<cr>", desc = "Command palette" },
     { "<leader>ff", "<cmd>Telescope find_files<cr>", desc = "Fuzzy find files in cwd" },
     { "<leader>fr", "<cmd>Telescope oldfiles<cr>", desc = "Fuzzy find recent files" },
     { "<leader>fs", "<cmd>Telescope live_grep<cr>", desc = "Find string in cwd" },
@@ -113,6 +113,25 @@ return {
         end,
       })
     end, desc = "Switch buffer (⌥E)" },
+    {
+      "<leader>fs",
+      function()
+        vim.cmd('normal! "vy')
+        local selected_text = vim.fn.getreg("v")
+        if selected_text == "" then
+          require("telescope.builtin").live_grep()
+        else
+          require("telescope.builtin").grep_string({
+            search = selected_text,
+            prompt_title = "Search: '" .. selected_text .. "'",
+          })
+        end
+      end,
+      mode = "v",
+      desc = "Search selected text",
+    },
+    { "<leader>fi", function() require("telescope.builtin").lsp_implementations() end, desc = "Search for implementations" },
+    { "<leader>fT", function() require("telescope.builtin").lsp_type_definitions() end, desc = "Type definitions" },
   },
   dependencies = {
     "nvim-lua/plenary.nvim",
@@ -135,21 +154,6 @@ return {
         trouble.toggle("quickfix")
       end,
     })
-
-    -- Workaround for treesitter ft_to_lang deprecation error
-    -- Override the highlighter to use the new API
-    local ts_utils = require("telescope.previewers.utils")
-    local old_highlighter = ts_utils.highlighter
-    ts_utils.highlighter = function(bufnr, ft)
-      -- Use vim.treesitter.language.get_lang instead of deprecated ft_to_lang
-      local ok, parser = pcall(vim.treesitter.get_parser, bufnr)
-      if ok and parser then
-        local lang = vim.treesitter.language.get_lang(ft) or ft
-        return old_highlighter(bufnr, lang)
-      end
-      -- Fallback to regular syntax highlighting
-      vim.bo[bufnr].syntax = ft
-    end
 
     telescope.setup({
       defaults = {
@@ -215,31 +219,5 @@ return {
 
     telescope.load_extension("fzf")
     telescope.load_extension("live_grep_args")
-
-    -- Only keymaps not already covered by the `keys` spec above
-    local keymap = vim.keymap
-
-    -- Visual mode: search selected text
-    keymap.set("v", "<leader>fs", function()
-      vim.cmd('normal! "vy')
-      local selected_text = vim.fn.getreg("v")
-      if selected_text == "" then
-        require("telescope.builtin").live_grep()
-      else
-        require("telescope.builtin").grep_string({
-          search = selected_text,
-          prompt_title = "Search: '" .. selected_text .. "'",
-        })
-      end
-    end, { desc = "Search selected text" })
-
-    -- LSP pickers not in keys spec
-    keymap.set("n", "<leader>fi", function()
-      require("telescope.builtin").lsp_implementations()
-    end, { desc = "Search for implementations" })
-
-    keymap.set("n", "<leader>fT", function()
-      require("telescope.builtin").lsp_type_definitions()
-    end, { desc = "Type definitions" })
   end,
 }

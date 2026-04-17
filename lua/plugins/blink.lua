@@ -8,14 +8,14 @@ return {
   },
   opts = function(_, opts)
     opts.sources = vim.tbl_deep_extend("force", opts.sources or {}, {
-      default = { "copilot", "lsp", "path", "snippets", "buffer", "emoji" },
+      default = { "lsp", "path", "snippets", "buffer", "emoji" },
       providers = {
         lsp = {
           name = "lsp",
           enabled = true,
           module = "blink.cmp.sources.lsp",
           kind = "LSP",
-          min_keyword_length = 2,
+          min_keyword_length = 1,
           score_offset = 90, -- the higher the number, the higher the priority
         },
         path = {
@@ -78,7 +78,7 @@ return {
         emoji = {
           module = "blink-emoji",
           name = "Emoji",
-          score_offset = 93, -- the higher the number, the higher the priority
+          score_offset = 20, -- Below LSP (90), snippets (85), and buffer — only surface on explicit :emoji keyword
           min_keyword_length = 2,
           opts = { insert = true }, -- Insert emoji (default) or complete its name
         },
