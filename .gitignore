@@ -9,3 +9,4 @@ data
 .agent/
 .nvimlog
 health.txt
+.omc
