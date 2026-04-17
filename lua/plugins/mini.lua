@@ -153,6 +153,7 @@ return {
           { mode = "n", keys = "<Leader>n", desc = "+npm" },
           { mode = "n", keys = "<Leader>q", desc = "+quit / quickfix / session" },
           { mode = "n", keys = "<Leader>r", desc = "+refactor / rust" },
+          { mode = "n", keys = "<Leader>R", desc = "+rust (LSP)" },
           { mode = "n", keys = "<Leader>s", desc = "+split / search" },
           { mode = "n", keys = "<Leader>t", desc = "+test" },
           { mode = "n", keys = "<Leader>u", desc = "+ui / utils" },

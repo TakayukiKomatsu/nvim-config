@@ -91,7 +91,8 @@ return {
       desc = "Debug print variable",
     },
     {
-      "<leader>rc",
+      -- Moved from <leader>rc to avoid collision with crates.nvim's <leader>rc* prefix (rust.lua).
+      "<leader>rx",
       function() require("refactoring").debug.cleanup({}) end,
       mode = "n",
       desc = "Cleanup debug prints",

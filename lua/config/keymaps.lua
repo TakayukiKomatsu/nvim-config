@@ -9,9 +9,8 @@
 --   3. Plugin-local mappings via each plugin's keys spec.
 local keymap = vim.keymap
 
--- Remove LazyVim default mappings we override (pcall in case the plugin isn't loaded yet).
+-- Remove LazyVim default mapping for <leader>e (LazyVim routes it to neo-tree; we use nvim-tree).
 pcall(keymap.del, "n", "<leader>e")
-pcall(keymap.del, "n", "<C-down>")
 
 for _, module in ipairs({
   "file",

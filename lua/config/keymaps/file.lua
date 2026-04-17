@@ -16,5 +16,6 @@ keymap.set("n", "<leader>qQ", "<cmd>qa!<CR>", { desc = "Quit all without saving"
 keymap.set("n", "<A-w>", function()
   require("mini.bufremove").delete(0, false)
 end, { desc = "Close buffer (⌥W)" })
-keymap.set("n", "<leader>bo", ":%bd|e#|bd#<CR>|'\"", { desc = "Close all buffers except current" })
+-- Delete all buffers but the current one; `'"` restores the cursor to its last known position.
+keymap.set("n", "<leader>bo", ":%bd|e#|bd#<CR>'\"", { desc = "Close all buffers except current" })
 keymap.set("n", "<leader>bD", ":%bd<CR>", { desc = "Delete all buffers" })
