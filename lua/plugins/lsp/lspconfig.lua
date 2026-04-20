@@ -77,6 +77,7 @@ return {
 
     -- used to enable autocompletion (assign to every lsp server config)
     local capabilities = require("blink.cmp").get_lsp_capabilities()
+    local util = require("lspconfig.util")
 
     local server_overrides = {
       -- Gopls with better settings
@@ -157,6 +158,20 @@ return {
         lspconfig["emmet_ls"].setup({
           capabilities = capabilities,
           filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
+        })
+      end,
+
+      -- Keep vtsls out of Angular workspaces to avoid duplicate definitions with angularls
+      vtsls = function()
+        lspconfig["vtsls"].setup({
+          capabilities = capabilities,
+          single_file_support = false,
+          root_dir = function(fname)
+            if util.root_pattern("angular.json")(fname) then
+              return nil
+            end
+            return util.root_pattern("tsconfig.json", "jsconfig.json", "package.json", ".git")(fname)
+          end,
         })
       end,
 
