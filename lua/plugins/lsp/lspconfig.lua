@@ -205,10 +205,20 @@ return {
       end,
     }
 
+    local function has_lspconfig(server_name)
+      return pcall(require, "lspconfig.configs." .. server_name)
+    end
+
     local function setup_server(server_name)
       local override = server_overrides[server_name]
       if override then
         override()
+        return
+      end
+
+      -- Skip mason packages that advertise a bogus lspconfig mapping
+      -- (e.g. stylua, whose registry spec points at a non-existent config).
+      if not has_lspconfig(server_name) then
         return
       end
 
