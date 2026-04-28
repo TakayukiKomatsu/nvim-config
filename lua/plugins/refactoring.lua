@@ -5,6 +5,7 @@ return {
   dependencies = {
     "nvim-lua/plenary.nvim",
     "nvim-treesitter/nvim-treesitter",
+    "lewis6991/async.nvim",
   },
   opts = {
     prompt_func_return_type = {
@@ -69,10 +70,10 @@ return {
       desc = "Extract block to file",
     },
 
-    -- Telescope picker for all refactors
+    -- Picker for all refactors (uses vim.ui.select; telescope-ui-select/dressing.nvim enhance it)
     {
       "<leader>rr",
-      function() require("telescope").extensions.refactoring.refactors() end,
+      function() require("refactoring").select_refactor() end,
       mode = { "n", "x" },
       desc = "Refactoring menu",
     },
