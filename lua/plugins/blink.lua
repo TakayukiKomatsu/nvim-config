@@ -127,6 +127,14 @@ return {
       ghost_text = {
         enabled = true,
       },
+      trigger = {
+        show_in_snippet = false,
+      },
+      list = {
+        selection = {
+          preselect = false,
+        },
+      },
     }
 
     -- Signature help configuration (shows function parameters while typing)
@@ -155,17 +163,14 @@ return {
       end,
     }
     opts.keymap = {
-      preset = "default",
-
-      -- Keep Tab for indentation/snippet jump only; accept with Enter and navigate with arrows
-      ["<Tab>"] = { "snippet_forward", "fallback" },
-      ["<S-Tab>"] = { "snippet_backward", "fallback" },
+      -- Tab accepts visible completion items, jumps through snippets, then falls back to indentation.
+      preset = "super-tab",
 
       -- Item selection (use Ctrl - avoids conflict with window nav <A-j/k>)
       ["<Up>"] = { "select_prev", "fallback" },
       ["<Down>"] = { "select_next", "fallback" },
-      ["<C-p>"] = { "select_prev", "fallback" },
-      ["<C-n>"] = { "select_next", "fallback" },
+      ["<C-p>"] = { "select_prev", "fallback_to_mappings" },
+      ["<C-n>"] = { "select_next", "fallback_to_mappings" },
 
       -- Documentation scrolling (use Ctrl - avoids conflict with page scroll <A-u/d>)
       ["<C-b>"] = { "scroll_documentation_up", "fallback" },
@@ -173,11 +178,17 @@ return {
 
       -- Accept completion
       ["<CR>"] = { "accept", "fallback" },
-
-      -- Show/hide completion and documentation
-      ["<C-space>"] = { "show", "show_documentation", "hide_documentation" },
-      ["<C-e>"] = { "hide", "fallback" },
-      ["<A-space>"] = { "show", "show_documentation", "hide_documentation" },
+      -- Show completion with an initial selection so documentation has an item to render.
+      ["<C-space>"] = {
+        function(cmp)
+          cmp.show({ initial_selected_item_idx = 1 })
+          vim.schedule(function()
+            cmp.show_documentation()
+          end)
+          return true
+        end,
+      },
+      ["<C-e>"] = { "show_documentation", "hide_documentation", "fallback" },
       ["<Esc>"] = { "hide", "fallback" },
     }
 
