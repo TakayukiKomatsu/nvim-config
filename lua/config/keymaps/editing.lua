@@ -27,8 +27,5 @@ keymap.set("v", "<S-Tab>", "<gv", { desc = "Unindent" })
 keymap.set("v", "<", "<gv", { desc = "Unindent" })
 keymap.set("v", ">", ">gv", { desc = "Indent" })
 
--- Join/increment/macros
+-- Join (increment/decrement live on <C-a>/<C-x> via dial.nvim; native Q already replays last register)
 keymap.set("n", "J", "mzJ`z", { desc = "Join lines without moving cursor" })
-keymap.set("n", "<leader>+", "<C-a>", { desc = "Increment number" })
-keymap.set("n", "<leader>-", "<C-x>", { desc = "Decrement number" })
-keymap.set("n", "Q", "@@", { desc = "Replay last macro" })

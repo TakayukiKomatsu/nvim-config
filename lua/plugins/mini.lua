@@ -55,8 +55,8 @@ return {
     event = "VeryLazy",
     opts = {
       buffer = { suffix = "b", options = {} },
-      comment = { suffix = "c", options = {} },
-      conflict = { suffix = "x", options = {} },
+      comment = { suffix = "" }, -- Disabled: [c/]c owned by treesitter-context (jump to context)
+      conflict = { suffix = "" }, -- Disabled: [x/]x owned by git-conflict.nvim (richer resolution UI)
       diagnostic = { suffix = "d", options = {} },
       file = { suffix = "f", options = {} },
       indent = { suffix = "" }, -- Disabled: mini.indentscope uses [i/]i
@@ -197,6 +197,28 @@ return {
     opts = {
       only_in_normal_buffers = true,
     },
+    config = function(_, opts)
+      require("mini.trailspace").setup(opts)
+
+      -- Auto-trim trailing whitespace on every write (auto-save included).
+      -- Skip filetypes where trailing whitespace is meaningful or shouldn't be touched.
+      local skip_ft = {
+        markdown = true, -- two trailing spaces = a hard line break
+        gitcommit = true,
+        diff = true,
+        patch = true,
+      }
+      vim.api.nvim_create_autocmd("BufWritePre", {
+        group = vim.api.nvim_create_augroup("AutoTrimTrailing", { clear = true }),
+        callback = function(args)
+          local buf = args.buf
+          if skip_ft[vim.bo[buf].filetype] or not vim.bo[buf].modifiable then
+            return
+          end
+          require("mini.trailspace").trim()
+        end,
+      })
+    end,
   },
 
   -- Mini.indentscope - Active indent scope with motions and textobjects

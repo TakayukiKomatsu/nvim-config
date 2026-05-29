@@ -1,7 +1,12 @@
 return {
   "folke/flash.nvim",
   ---@type Flash.Config
-  opts = {},
+  opts = {
+    -- Show flash labels during regular `/` and `?` search for instant jumping
+    modes = {
+      search = { enabled = true },
+    },
+  },
   -- stylua: ignore
   keys = {
     { "s", mode = { "n", "x", "o" }, function() require("flash").jump() end, desc = "Flash jump" },

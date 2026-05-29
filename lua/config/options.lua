@@ -16,14 +16,24 @@ opt.relativenumber = true
 opt.number = true
 
 -- Tabs & indentation
+-- Personal default is real tabs. A project's .editorconfig overrides these
+-- per-buffer (Neovim's built-in EditorConfig support, enabled below).
 opt.tabstop = 2
 opt.shiftwidth = 2
-opt.expandtab = true
+opt.expandtab = false
 opt.autoindent = true
 
--- Whitespace hints (helps spot mixed indentation)
+-- Respect .editorconfig per project (indent_style/size, end_of_line, charset, …).
+-- On by default in Neovim, set explicitly so the intent is visible.
+vim.g.editorconfig = true
+
+-- Whitespace hints. `lead` is intentionally omitted: mini.indentscope shows the
+-- indent structure and tabs-vs-spaces.nvim flags indentation that deviates from
+-- the buffer's dominant style (both directions), so per-space lead dots would
+-- only add noise. `nbsp` catches non-breaking spaces pasted from the web.
+-- Trailing whitespace is owned by mini.trailspace (highlight + auto-trim on save).
 opt.list = true
-opt.listchars = { tab = "→ ", lead = "·", trail = "·" }
+opt.listchars = { tab = "→ ", nbsp = "␣", trail = "·" }
 
 -- Line wrapping
 opt.wrap = true

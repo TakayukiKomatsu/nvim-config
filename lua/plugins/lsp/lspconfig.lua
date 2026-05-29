@@ -1,234 +1,207 @@
+-- Native LSP setup (Neovim 0.11+): servers are configured with vim.lsp.config()
+-- and turned on with vim.lsp.enable(). nvim-lspconfig is kept as a dependency for
+-- the base server definitions it ships in its `lsp/` runtime directory.
 return {
   "neovim/nvim-lspconfig",
   event = { "BufReadPre", "BufNewFile" },
   dependencies = {
     { "antosha417/nvim-lsp-file-operations", config = true },
+    "mason-org/mason-lspconfig.nvim",
+    "saghen/blink.cmp",
   },
   config = function()
-    -- import lspconfig plugin
-    local lspconfig = require("lspconfig")
+    local keymap = vim.keymap
 
-    -- import mason_lspconfig plugin
-    local mason_lspconfig = require("mason-lspconfig")
-
-    local keymap = vim.keymap -- for conciseness
-
+    -- ── Buffer-local keymaps on attach ────────────────────────────────────────
     vim.api.nvim_create_autocmd("LspAttach", {
       group = vim.api.nvim_create_augroup("UserLspConfig", {}),
       callback = function(ev)
-        -- Buffer local mappings.
-        -- See `:help vim.lsp.*` for documentation on any of the below functions
         local opts = { buffer = ev.buf, silent = true }
 
-        -- set keybinds
         opts.desc = "Show LSP references (Telescope)"
-        keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts) -- show references in Telescope
+        keymap.set("n", "gR", "<cmd>Telescope lsp_references<CR>", opts)
 
         opts.desc = "LSP references (quickfix)"
-        keymap.set("n", "gr", vim.lsp.buf.references, opts) -- show references in quickfix
+        keymap.set("n", "gr", vim.lsp.buf.references, opts)
 
         opts.desc = "Go to declaration"
-        keymap.set("n", "gD", vim.lsp.buf.declaration, opts) -- go to declaration
+        keymap.set("n", "gD", vim.lsp.buf.declaration, opts)
 
-        opts.desc = "show lsp definitions"
-        keymap.set("n", "gd", "<cmd>telescope lsp_definitions<cr>", opts) -- show lsp definitions
+        opts.desc = "Show LSP definitions"
+        keymap.set("n", "gd", "<cmd>Telescope lsp_definitions<CR>", opts)
 
         opts.desc = "Show LSP implementations"
-        keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts) -- show lsp implementations
+        keymap.set("n", "gi", "<cmd>Telescope lsp_implementations<CR>", opts)
 
         opts.desc = "Show LSP type definitions"
-        keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts) -- show lsp type definitions
+        keymap.set("n", "gt", "<cmd>Telescope lsp_type_definitions<CR>", opts)
 
         opts.desc = "See available code actions"
-        keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts) -- see available code actions, in visual mode will apply to selection
+        keymap.set({ "n", "v" }, "<leader>ca", vim.lsp.buf.code_action, opts)
 
         opts.desc = "Smart rename"
-        keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts) -- smart rename
+        keymap.set("n", "<leader>rn", vim.lsp.buf.rename, opts)
 
         opts.desc = "Show buffer diagnostics"
-        keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts) -- show  diagnostics for file
+        keymap.set("n", "<leader>D", "<cmd>Telescope diagnostics bufnr=0<CR>", opts)
 
         opts.desc = "Show line diagnostics"
-        keymap.set("n", "<leader>cd", vim.diagnostic.open_float, opts) -- show diagnostics for line
+        keymap.set("n", "<leader>cd", vim.diagnostic.open_float, opts)
 
         opts.desc = "Go to previous diagnostic"
         keymap.set("n", "[d", function()
           vim.diagnostic.jump({ count = -1, float = true })
-        end, opts) -- jump to previous diagnostic in buffer
+        end, opts)
 
         opts.desc = "Go to next diagnostic"
         keymap.set("n", "]d", function()
           vim.diagnostic.jump({ count = 1, float = true })
-        end, opts) -- jump to next diagnostic in buffer
+        end, opts)
 
         opts.desc = "Show documentation for what is under cursor"
-        keymap.set("n", "K", vim.lsp.buf.hover, opts) -- show documentation for what is under cursor
+        keymap.set("n", "K", vim.lsp.buf.hover, opts)
 
         opts.desc = "Restart LSP"
-        keymap.set("n", "<leader>rs", ":LspRestart<CR>", opts) -- mapping to restart lsp if necessary
+        keymap.set("n", "<leader>rs", "<cmd>LspRestart<CR>", opts)
 
-        -- Enable inlay hints for servers that support them (user can toggle with <leader>uI)
         local client = vim.lsp.get_client_by_id(ev.data.client_id)
-        if client and client.server_capabilities.inlayHintProvider then
+
+        -- Enable inlay hints for servers that support them (toggle with <leader>uI)
+        if client and client.server_capabilities and client.server_capabilities.inlayHintProvider then
           vim.lsp.inlay_hint.enable(true, { bufnr = ev.buf })
+        end
+
+        -- vtsls: TypeScript/JavaScript import & fix helpers via tsserver source actions.
+        -- (Replaces the old typescript-tools.nvim <leader>ct* commands.)
+        if client and client.name == "vtsls" then
+          local function ts_action(kind)
+            return function()
+              vim.lsp.buf.code_action({
+                apply = true,
+                context = { only = { kind }, diagnostics = {} },
+              })
+            end
+          end
+          local function ts_map(lhs, kind, desc)
+            keymap.set("n", lhs, ts_action(kind), { buffer = ev.buf, silent = true, desc = desc })
+          end
+          ts_map("<leader>cto", "source.organizeImports", "Organize imports")
+          ts_map("<leader>cta", "source.addMissingImports.ts", "Add missing imports")
+          ts_map("<leader>ctr", "source.removeUnused.ts", "Remove unused")
+          ts_map("<leader>ctf", "source.fixAll.ts", "Fix all")
         end
       end,
     })
 
-    -- used to enable autocompletion (assign to every lsp server config)
-    local capabilities = require("blink.cmp").get_lsp_capabilities()
+    -- ── Capabilities (blink.cmp) applied to every server ──────────────────────
+    vim.lsp.config("*", {
+      capabilities = require("blink.cmp").get_lsp_capabilities(),
+    })
+
     local util = require("lspconfig.util")
 
-    local server_overrides = {
-      -- Gopls with better settings
-      gopls = function()
-        lspconfig["gopls"].setup({
-          capabilities = capabilities,
-          settings = {
-            gopls = {
-              gofumpt = true,
-              codelenses = {
-                gc_details = false,
-                generate = true,
-                regenerate_cgo = true,
-                run_govulncheck = true,
-                test = true,
-                tidy = true,
-                upgrade_dependency = true,
-                vendor = true,
-              },
-              hints = {
-                assignVariableTypes = true,
-                compositeLiteralFields = true,
-                compositeLiteralTypes = true,
-                constantValues = true,
-                functionTypeParameters = true,
-                parameterNames = true,
-                rangeVariableTypes = true,
-              },
-              analyses = {
-                fieldalignment = true,
-                nilness = true,
-                unusedparams = true,
-                unusedwrite = true,
-                useany = true,
-              },
-              usePlaceholders = true,
-              completeUnimported = true,
-              staticcheck = true,
-              directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
-              semanticTokens = true,
-            },
+    -- ── Per-server overrides ──────────────────────────────────────────────────
+    vim.lsp.config("gopls", {
+      settings = {
+        gopls = {
+          gofumpt = true,
+          codelenses = {
+            gc_details = false,
+            generate = true,
+            regenerate_cgo = true,
+            run_govulncheck = true,
+            test = true,
+            tidy = true,
+            upgrade_dependency = true,
+            vendor = true,
           },
-        })
-      end,
-
-      -- Ruff (Python) - fast linter/formatter only (no definition/hover/rename)
-      ruff = function()
-        lspconfig["ruff"].setup({
-          capabilities = capabilities,
-          init_options = {
-            settings = {
-              args = {},
-            },
+          hints = {
+            assignVariableTypes = true,
+            compositeLiteralFields = true,
+            compositeLiteralTypes = true,
+            constantValues = true,
+            functionTypeParameters = true,
+            parameterNames = true,
+            rangeVariableTypes = true,
           },
-          on_attach = function(client)
-            -- Ruff handles linting/formatting only; defer navigation to pyright
-            client.server_capabilities.hoverProvider = false
-            client.server_capabilities.definitionProvider = false
-            client.server_capabilities.referencesProvider = false
-            client.server_capabilities.renameProvider = false
-            client.server_capabilities.declarationProvider = false
-            client.server_capabilities.implementationProvider = false
-            client.server_capabilities.typeDefinitionProvider = false
-          end,
-        })
-      end,
-
-      -- configure graphql language server
-      graphql = function()
-        lspconfig["graphql"].setup({
-          capabilities = capabilities,
-          filetypes = { "graphql", "gql", "typescriptreact", "javascriptreact" },
-        })
-      end,
-
-      -- configure emmet language server
-      emmet_ls = function()
-        lspconfig["emmet_ls"].setup({
-          capabilities = capabilities,
-          filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
-        })
-      end,
-
-      -- Keep vtsls out of Angular workspaces to avoid duplicate definitions with angularls
-      vtsls = function()
-        lspconfig["vtsls"].setup({
-          capabilities = capabilities,
-          single_file_support = false,
-          root_dir = function(fname)
-            if util.root_pattern("angular.json")(fname) then
-              return nil
-            end
-            return util.root_pattern("tsconfig.json", "jsconfig.json", "package.json", ".git")(fname)
-          end,
-        })
-      end,
-
-      -- Configure Zig Language Server (ZLS)
-      zls = function()
-        lspconfig["zls"].setup({
-          capabilities = capabilities,
-          filetypes = { "zig" },
-        })
-      end,
-
-      -- nvim-java owns JDTLS setup and lifecycle
-      jdtls = function() end,
-
-      -- configure lua server (with special settings)
-      lua_ls = function()
-        lspconfig["lua_ls"].setup({
-          capabilities = capabilities,
-          settings = {
-            Lua = {
-              -- make the language server recognize "vim" global
-              diagnostics = {
-                globals = { "vim" },
-              },
-              completion = {
-                callSnippet = "Replace",
-              },
-            },
+          analyses = {
+            fieldalignment = true,
+            nilness = true,
+            unusedparams = true,
+            unusedwrite = true,
+            useany = true,
           },
-        })
+          usePlaceholders = true,
+          completeUnimported = true,
+          staticcheck = true,
+          directoryFilters = { "-.git", "-.vscode", "-.idea", "-.vscode-test", "-node_modules" },
+          semanticTokens = true,
+        },
+      },
+    })
+
+    -- Ruff (Python): fast linter/formatter only; pyright handles navigation/hover.
+    vim.lsp.config("ruff", {
+      init_options = {
+        settings = {
+          args = {},
+        },
+      },
+      on_attach = function(client)
+        client.server_capabilities.hoverProvider = false
+        client.server_capabilities.definitionProvider = false
+        client.server_capabilities.referencesProvider = false
+        client.server_capabilities.renameProvider = false
+        client.server_capabilities.declarationProvider = false
+        client.server_capabilities.implementationProvider = false
+        client.server_capabilities.typeDefinitionProvider = false
       end,
-    }
+    })
 
-    local function has_lspconfig(server_name)
-      return pcall(require, "lspconfig.configs." .. server_name)
-    end
+    vim.lsp.config("graphql", {
+      filetypes = { "graphql", "gql", "typescriptreact", "javascriptreact" },
+    })
 
-    local function setup_server(server_name)
-      local override = server_overrides[server_name]
-      if override then
-        override()
-        return
+    vim.lsp.config("emmet_ls", {
+      filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
+    })
+
+    -- Keep vtsls out of Angular workspaces so it doesn't fight angularls.
+    vim.lsp.config("vtsls", {
+      single_file_support = false,
+      root_dir = function(bufnr, on_dir)
+        local fname = vim.api.nvim_buf_get_name(bufnr)
+        if util.root_pattern("angular.json")(fname) then
+          return -- defer to angularls
+        end
+        local root = util.root_pattern("tsconfig.json", "jsconfig.json", "package.json", ".git")(fname)
+        if root then
+          on_dir(root)
+        end
+      end,
+    })
+
+    vim.lsp.config("lua_ls", {
+      settings = {
+        Lua = {
+          diagnostics = { globals = { "vim" } },
+          completion = { callSnippet = "Replace" },
+        },
+      },
+    })
+
+    -- ── Enable installed servers, minus ones we must not start ────────────────
+    --   jdtls         -> owned by nvim-java
+    --   rust_analyzer -> owned by rustaceanvim
+    --   stylua        -> a formatter (run by conform); mason-lspconfig lists it
+    --                    because nvim-lspconfig ships a bogus lsp/stylua.lua
+    local skip = { jdtls = true, rust_analyzer = true, stylua = true }
+    local to_enable = {}
+    for _, name in ipairs(require("mason-lspconfig").get_installed_servers()) do
+      if not skip[name] then
+        table.insert(to_enable, name)
       end
-
-      -- Skip mason packages that advertise a bogus lspconfig mapping
-      -- (e.g. stylua, whose registry spec points at a non-existent config).
-      if not has_lspconfig(server_name) then
-        return
-      end
-
-      lspconfig[server_name].setup({
-        capabilities = capabilities,
-      })
     end
-
-    for _, server_name in ipairs(mason_lspconfig.get_installed_servers()) do
-      setup_server(server_name)
-    end
+    vim.lsp.enable(to_enable)
   end,
 }

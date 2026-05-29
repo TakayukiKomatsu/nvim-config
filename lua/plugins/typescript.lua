@@ -31,47 +31,7 @@ return {
     },
   },
 
-  -- Primary TypeScript/JavaScript language tooling
-  {
-    "pmizio/typescript-tools.nvim",
-    dependencies = { "nvim-lua/plenary.nvim", "neovim/nvim-lspconfig" },
-    ft = { "typescript", "typescriptreact", "javascript", "javascriptreact" },
-    opts = {
-      filetypes = { "javascript", "javascriptreact", "typescript", "typescriptreact" },
-      settings = {
-        separate_diagnostic_server = true,
-        publish_diagnostic_on = "insert_leave",
-        expose_as_code_action = "all",
-        tsserver_path = nil,
-        tsserver_plugins = {},
-        tsserver_max_memory = "auto",
-        tsserver_format_options = {},
-        tsserver_file_preferences = {
-          includeInlayParameterNameHints = "all",
-          includeInlayParameterNameHintsWhenArgumentMatchesName = false,
-          includeInlayFunctionParameterTypeHints = true,
-          includeInlayVariableTypeHints = true,
-          includeInlayPropertyDeclarationTypeHints = true,
-          includeInlayFunctionLikeReturnTypeHints = true,
-          includeInlayEnumMemberValueHints = true,
-        },
-        tsserver_locale = "en",
-        complete_function_calls = true,
-        include_completions_with_insert_text = true,
-        code_lens = "all",
-        disable_member_code_lens = false,
-      },
-    },
-    keys = {
-      { "<leader>cto", "<cmd>TSToolsOrganizeImports<cr>", desc = "Organize imports" },
-      { "<leader>cts", "<cmd>TSToolsSortImports<cr>", desc = "Sort imports" },
-      { "<leader>ctr", "<cmd>TSToolsRemoveUnusedImports<cr>", desc = "Remove unused imports" },
-      { "<leader>ctR", "<cmd>TSToolsRemoveUnused<cr>", desc = "Remove all unused" },
-      { "<leader>cta", "<cmd>TSToolsAddMissingImports<cr>", desc = "Add missing imports" },
-      { "<leader>ctf", "<cmd>TSToolsFixAll<cr>", desc = "Fix all" },
-      { "<leader>ctg", "<cmd>TSToolsGoToSourceDefinition<cr>", desc = "Go to source definition" },
-      { "<leader>ctF", "<cmd>TSToolsFileReferences<cr>", desc = "File references" },
-      { "<leader>ctd", "<cmd>TSToolsRenameFile<cr>", desc = "Rename file" },
-    },
-  },
+  -- TypeScript/JavaScript language server is vtsls, configured natively in
+  -- lua/plugins/lsp/lspconfig.lua. The <leader>ct* import/fix commands are
+  -- registered there (buffer-local) when vtsls attaches.
 }

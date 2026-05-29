@@ -50,6 +50,8 @@ return {
 
         -- Rust handled by rustaceanvim (rust-analyzer)
       },
+      -- Enabling is handled in lspconfig.lua via vim.lsp.enable() so config
+      -- registration and enabling stay in one deterministic place.
       automatic_enable = false,
     })
 
@@ -71,10 +73,9 @@ return {
         -- Python
         "mypy", -- type checker
 
-        -- Go
+        -- Go (linting handled by gopls staticcheck/analyses, not golangci-lint)
         "gofumpt", -- stricter gofmt
         "goimports", -- auto imports
-        "golangci-lint", -- linter
         "delve", -- debugger
 
         -- Java

@@ -34,7 +34,8 @@ require("lazy").setup({
     enabled = false,
     hererocks = false,
   },
-  checker = { enabled = true }, -- automatically check for plugin updates
+  checker = { enabled = true, notify = false }, -- check for updates quietly (count shows in lualine)
+  change_detection = { notify = false }, -- silence "config changed, reloading" popups
   performance = {
     rtp = {
       -- disable some rtp plugins
