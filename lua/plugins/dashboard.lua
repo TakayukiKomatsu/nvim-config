@@ -14,16 +14,16 @@ return {
           header = "",
           -- stylua: ignore
           keys = {
-            { icon = " ", key = "f", desc = "Find File", action = ":Telescope find_files" },
-            { icon = " ", key = "g", desc = "Find Text", action = ":Telescope live_grep" },
-            { icon = " ", key = "r", desc = "Recent Files", action = ":Telescope oldfiles" },
+            { icon = " ", key = "f", desc = "Find File", action = function() Snacks.picker.files() end },
+            { icon = " ", key = "g", desc = "Find Text", action = function() Snacks.picker.grep() end },
+            { icon = " ", key = "r", desc = "Recent Files", action = function() Snacks.picker.recent() end },
             { icon = " ", key = "s", desc = "Restore Session", action = function() require("persistence").load() end },
             { icon = "󰈔 ", key = "h", desc = "Harpoon Files", action = function()
               local harpoon = require("harpoon")
               harpoon.ui:toggle_quick_menu(harpoon:list())
             end },
-            { icon = " ", key = "t", desc = "Find Todos", action = ":TodoTelescope" },
-            { icon = " ", key = "k", desc = "Keymaps", action = ":Telescope keymaps" },
+            { icon = " ", key = "t", desc = "Find Todos", action = ":Trouble todo" },
+            { icon = " ", key = "k", desc = "Keymaps", action = function() Snacks.picker.keymaps() end },
             { icon = " ", key = "G", desc = "LazyGit", action = function() Snacks.lazygit() end },
             { icon = " ", key = "m", desc = "Mason (LSP)", action = ":Mason" },
             { icon = " ", key = "c", desc = "Config", action = ":e $MYVIMRC | cd %:p:h" },

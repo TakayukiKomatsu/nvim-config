@@ -50,7 +50,7 @@ opt.background = "dark"
 
 -- LazyVim behavior
 vim.g.autoformat = false -- format manually via <leader>cf / <A-F>
-vim.g.lazyvim_picker = "telescope"
+vim.g.lazyvim_picker = "snacks" -- snacks.picker (see lua/plugins/snacks-picker.lua)
 
 -- ═══════════════════════════════════════════════════════════════
 -- MAC SYSTEM INTEGRATION

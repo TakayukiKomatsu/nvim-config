@@ -6,8 +6,8 @@ return {
     "nvim-tree/nvim-web-devicons",
   },
   keys = {
-    { "<leader>O",  "<cmd>AerialToggle<cr>",    desc = "Toggle outline (aerial)" },
-    { "<leader>cs", "<cmd>Telescope aerial<cr>", desc = "Symbol search (aerial)" },
+    { "<leader>O",  "<cmd>AerialToggle<cr>",                       desc = "Toggle outline (aerial)" },
+    { "<leader>cs", function() Snacks.picker.lsp_symbols() end,    desc = "Symbol search" },
     { "[a", "<cmd>AerialPrev<cr>", desc = "Prev symbol" },
     { "]a", "<cmd>AerialNext<cr>", desc = "Next symbol" },
   },
@@ -30,6 +30,5 @@ return {
   },
   config = function(_, opts)
     require("aerial").setup(opts)
-    require("telescope").load_extension("aerial")
   end,
 }

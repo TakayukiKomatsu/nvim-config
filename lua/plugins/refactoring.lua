@@ -70,7 +70,7 @@ return {
       desc = "Extract block to file",
     },
 
-    -- Picker for all refactors (uses vim.ui.select; telescope-ui-select/dressing.nvim enhance it)
+    -- Picker for all refactors (uses vim.ui.select; dressing.nvim enhances it)
     {
       "<leader>rr",
       function() require("refactoring").select_refactor() end,
@@ -101,9 +101,6 @@ return {
   },
   config = function(_, opts)
     require("refactoring").setup(opts)
-    -- Load telescope extension
-    pcall(function()
-      require("telescope").load_extension("refactoring")
-    end)
+    -- select_refactor() uses vim.ui.select, which dressing.nvim prettifies.
   end,
 }
