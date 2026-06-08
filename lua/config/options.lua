@@ -38,12 +38,15 @@ opt.listchars = { tab = "→ ", nbsp = "␣", trail = "·" }
 -- Line wrapping
 opt.wrap = true
 
--- Folding (treesitter-based, no extra plugin needed)
-opt.foldmethod = "expr"
-opt.foldexpr = "v:lua.vim.treesitter.foldexpr()"
+-- Folding (provided by nvim-ufo, see lua/plugins/nvim-ufo.lua).
+-- ufo manages the fold provider (treesitter -> indent), so we only set the
+-- "everything open" defaults it requires and leave foldmethod at its default.
 opt.foldlevel = 99
 opt.foldlevelstart = 99
 opt.foldenable = true
+
+-- Live preview of :substitute (s/foo/bar) in a split as you type.
+opt.inccommand = "split"
 
 -- Colorscheme bias
 opt.background = "dark"
