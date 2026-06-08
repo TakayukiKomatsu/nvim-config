@@ -14,8 +14,31 @@ return {
         mode = { "n", "v" },
         desc = "Format buffer (⌥F)",
       },
+      {
+        "<leader>uF",
+        function()
+          if vim.b.disable_autoformat or vim.g.disable_autoformat then
+            vim.b.disable_autoformat = false
+            vim.g.disable_autoformat = false
+            vim.notify("Format on save: ON", vim.log.levels.INFO)
+          else
+            vim.b.disable_autoformat = true
+            vim.notify("Format on save: OFF (buffer)", vim.log.levels.WARN)
+          end
+        end,
+        desc = "Toggle format on save (buffer)",
+      },
     },
     opts = function(_, opts)
+      -- Format on save for every configured filetype. Toggle per-buffer with
+      -- <leader>uF, or disable globally via `:lua vim.g.disable_autoformat = true`.
+      opts.format_on_save = function(bufnr)
+        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+          return
+        end
+        return { timeout_ms = 1500, lsp_format = "fallback" }
+      end
+
       opts.formatters_by_ft = vim.tbl_extend("force", opts.formatters_by_ft or {}, {
         python          = { "ruff_organize_imports", "ruff_format" },
         lua             = { "stylua" },

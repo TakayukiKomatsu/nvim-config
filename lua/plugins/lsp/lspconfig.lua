@@ -90,6 +90,29 @@ return {
           ts_map("<leader>ctr", "source.removeUnused.ts", "Remove unused")
           ts_map("<leader>ctf", "source.fixAll.ts", "Fix all")
         end
+
+        -- eslint: auto-apply `eslint --fix` (safe, fixable rules) before each
+        -- write. `LspEslintFixAll` is the buffer-local command the eslint server
+        -- registers; it runs synchronously so the save picks up the fixes.
+        -- Guarded on pending eslint diagnostics so clean buffers save instantly
+        -- (matters because auto-save.nvim writes frequently).
+        if client and client.name == "eslint" then
+          local group = vim.api.nvim_create_augroup("EslintFixOnSave", { clear = false })
+          vim.api.nvim_clear_autocmds({ group = group, buffer = ev.buf })
+          vim.api.nvim_create_autocmd("BufWritePre", {
+            group = group,
+            buffer = ev.buf,
+            desc = "ESLint --fix on save",
+            callback = function()
+              local ok, ns = pcall(vim.lsp.diagnostic.get_namespace, client.id)
+              local diags = ok and vim.diagnostic.get(ev.buf, { namespace = ns })
+                or vim.diagnostic.get(ev.buf)
+              if #diags > 0 then
+                pcall(vim.cmd, "LspEslintFixAll")
+              end
+            end,
+          })
+        end
       end,
     })
 
