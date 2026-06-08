@@ -28,7 +28,9 @@ return {
       -- list of servers for mason to install
       ensure_installed = {
         -- TypeScript/JavaScript
+        "vtsls", -- TS/JS language server (configured in lspconfig.lua)
         "eslint", -- ESLint language server
+        "angularls", -- Angular language server
 
         -- Web
         "html",

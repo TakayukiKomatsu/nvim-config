@@ -86,6 +86,13 @@ return {
     })
 
     opts.completion = {
+      accept = {
+        -- LazyVim enables this, but our direct assignment to opts.completion
+        -- would otherwise clobber it.
+        auto_brackets = {
+          enabled = true,
+        },
+      },
       menu = {
         border = "rounded",
         winblend = 0,
@@ -223,6 +230,16 @@ return {
         Operator = "󰪚",
         TypeParameter = "󰬛",
         Emoji = "󰞅",
+      },
+    }
+
+    -- Command-line (`:`) completion — menu auto-shows as you type commands/paths.
+    opts.cmdline = {
+      enabled = true,
+      keymap = { preset = "cmdline" },
+      completion = {
+        menu = { auto_show = true },
+        list = { selection = { preselect = false } },
       },
     }
 

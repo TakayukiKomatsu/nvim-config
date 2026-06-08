@@ -166,6 +166,15 @@ return {
       filetypes = { "html", "typescriptreact", "javascriptreact", "css", "sass", "scss", "less" },
     })
 
+    -- Silence "unknown at-rule" noise from Tailwind directives (@tailwind, @apply, etc.).
+    vim.lsp.config("cssls", {
+      settings = {
+        css = { lint = { unknownAtRules = "ignore" } },
+        scss = { lint = { unknownAtRules = "ignore" } },
+        less = { lint = { unknownAtRules = "ignore" } },
+      },
+    })
+
     -- Keep vtsls out of Angular workspaces so it doesn't fight angularls.
     vim.lsp.config("vtsls", {
       single_file_support = false,
