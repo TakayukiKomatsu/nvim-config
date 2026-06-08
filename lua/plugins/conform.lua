@@ -17,23 +17,21 @@ return {
       {
         "<leader>uF",
         function()
-          if vim.b.disable_autoformat or vim.g.disable_autoformat then
-            vim.b.disable_autoformat = false
-            vim.g.disable_autoformat = false
-            vim.notify("Format on save: ON", vim.log.levels.INFO)
+          vim.g.disable_autoformat = not vim.g.disable_autoformat
+          if vim.g.disable_autoformat then
+            vim.notify("Format on save: OFF", vim.log.levels.WARN)
           else
-            vim.b.disable_autoformat = true
-            vim.notify("Format on save: OFF (buffer)", vim.log.levels.WARN)
+            vim.notify("Format on save: ON", vim.log.levels.INFO)
           end
         end,
-        desc = "Toggle format on save (buffer)",
+        desc = "Toggle format on save (global)",
       },
     },
     opts = function(_, opts)
-      -- Format on save for every configured filetype. Toggle per-buffer with
-      -- <leader>uF, or disable globally via `:lua vim.g.disable_autoformat = true`.
-      opts.format_on_save = function(bufnr)
-        if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then
+      -- Format on save for every configured filetype. Toggle globally with
+      -- <leader>uF (sets vim.g.disable_autoformat).
+      opts.format_on_save = function(_)
+        if vim.g.disable_autoformat then
           return
         end
         return { timeout_ms = 1500, lsp_format = "fallback" }
