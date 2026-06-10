@@ -100,6 +100,32 @@ return {
     },
   },
   config = function(_, opts)
+    -- Resolve an `async` module name collision. Two installed plugins both ship a
+    -- top-level `lua/async.lua` claiming `require("async")`:
+    --   * lewis6991/async.nvim   -- refactoring.nvim needs this (.run/.wrap/.await_all)
+    --   * kevinhwang91/promise-async -- nvim-ufo needs this (callable: async(fn))
+    -- Whichever loads first wins `package.loaded["async"]`; once ufo loads,
+    -- refactoring crashes on `async.run` (nil). The two APIs are disjoint
+    -- (refactoring uses field access, ufo uses the __call form), so install a
+    -- merged proxy that satisfies both regardless of load order.
+    local async_nvim = require("async.nvim")
+    local promise_async = package.loaded["async"]
+    if not (type(promise_async) == "table" and promise_async.sync) then
+      local ok, pa = pcall(dofile, vim.fn.stdpath("data") .. "/lazy/promise-async/lua/async.lua")
+      promise_async = (ok and pa) or nil
+    end
+    if promise_async then
+      package.loaded["async"] = setmetatable({}, {
+        __index = function(_, k)
+          local v = async_nvim[k]
+          if v ~= nil then return v end
+          return promise_async[k]
+        end,
+        __call = function(_, ...) return promise_async(...) end,
+      })
+    else
+      package.loaded["async"] = async_nvim
+    end
     require("refactoring").setup(opts)
     -- select_refactor() uses vim.ui.select, which dressing.nvim prettifies.
   end,

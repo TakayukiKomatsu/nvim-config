@@ -81,7 +81,7 @@ For deeper reload/debugging notes, see the Development Workflow section in `CLAU
 ## Keymap maintenance notes
 
 - Global keymaps live under `lua/config/keymaps/` split by feature (file / navigation / search / editing / window / clipboard / insert / toggle)
-- Plugin `keys = {}` definitions still matter for lazy-loaded behavior (format, nvim-tree, telescope, refactoring, rust, dap, …)
+- Plugin `keys = {}` definitions still matter for lazy-loaded behavior (format, nvim-tree, snacks.picker, refactoring, rust, dap, …)
 - `lua/plugins/lsp/lspconfig.lua` adds buffer-local LSP mappings
 - `lua/plugins/mini.lua` registers the `mini.clue` group labels for `<Leader>*` submenus
 
@@ -98,6 +98,7 @@ If you are changing keymaps, grep both `lua/config/keymaps/` and `lua/plugins/*`
 - active file explorer: **`nvim-tree`**
 - active colorscheme path: `lua/plugins/colorschema.lua` with `witch-dark` / `witch`
 - completion engine: **`blink.cmp`**
+- format-on-save: **enabled via conform.nvim** (`<leader>uF` toggles)
 - validation scope: **local only**
 
 ## Terminal setup

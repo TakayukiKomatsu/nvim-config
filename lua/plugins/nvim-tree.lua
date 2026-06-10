@@ -12,9 +12,8 @@ return {
     "NvimTreeRefresh",
   },
   keys = {
-    -- Toggle uses <leader>ee so <leader>e is a pure prefix (no timeout vs. clue-popup race).
+    -- <leader>e is a pure explorer prefix; <leader>ee toggles the tree.
     { "<leader>ee", "<cmd>NvimTreeToggle<cr>", desc = "Toggle NvimTree (right)" },
-    { "<leader>e", "<cmd>NvimTreeToggle<cr>", desc = "Toggle NvimTree (right)" },
     { "<leader>ef", "<cmd>NvimTreeFindFileToggle<CR>", desc = "Find file in NvimTree" },
     { "<leader>ec", "<cmd>NvimTreeCollapse<CR>", desc = "Collapse NvimTree" },
     { "<leader>er", "<cmd>NvimTreeRefresh<CR>", desc = "Refresh NvimTree" },
