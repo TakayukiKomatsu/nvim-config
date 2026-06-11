@@ -57,7 +57,7 @@ return {
       buffer = { suffix = "b", options = {} },
       comment = { suffix = "" }, -- Disabled: [c/]c owned by treesitter-context (jump to context)
       conflict = { suffix = "" }, -- Disabled: [x/]x owned by git-conflict.nvim (richer resolution UI)
-      diagnostic = { suffix = "d", options = {} },
+      diagnostic = { suffix = "" }, -- Disabled: LSP attach owns [d/]d with diagnostic floats
       file = { suffix = "f", options = {} },
       indent = { suffix = "" }, -- Disabled: mini.indentscope uses [i/]i
       jump = { suffix = "j", options = {} },

@@ -27,7 +27,7 @@ return {
       function()
         require("oil").open(oil_or_current_dir())
       end,
-      desc = "Open Oil at current file dir",
+      desc = "Open Oil at current/Oil dir",
     },
 
   },
