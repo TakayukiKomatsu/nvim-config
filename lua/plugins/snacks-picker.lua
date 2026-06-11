@@ -56,9 +56,10 @@ return {
       end)
     end, desc = "Grep with glob filter" },
 
-    -- Buffers (snacks provides native `dd` / <c-x> delete; mru via sort_lastused)
+    -- Buffers. <leader>bb opens in list focus so `dd` deletes the selected buffer immediately.
     { "\\",         function() Snacks.picker.buffers({ current = false }) end, desc = "List open buffers" },
     { "<A-e>",      function() Snacks.picker.buffers({ current = false }) end, desc = "Switch buffer (⌥E)" },
+    { "<leader>bb", function() Snacks.picker.buffers({ current = false, focus = "list" }) end, desc = "Buffer manager" },
     { "<leader>fb", function() Snacks.picker.buffers({ current = false }) end, desc = "Buffers" },
     { "<leader>fB", function() Snacks.picker.buffers() end,                    desc = "All buffers (incl. current)" },
 

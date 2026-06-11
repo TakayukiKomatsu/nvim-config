@@ -2,7 +2,6 @@
 local keymap = vim.keymap
 
 -- Select all
-keymap.set("n", "<leader>a", "ggVG", { desc = "Select all" })
 keymap.set("n", "<A-a>", "ggVG", { desc = "Select all (⌥A)" })
 
 -- Duplicate

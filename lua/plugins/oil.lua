@@ -1,10 +1,35 @@
+local function oil_or_current_dir()
+  local ok, oil = pcall(require, "oil")
+  local cwd = ok and oil.get_current_dir() or nil
+  if cwd then
+    return cwd
+  end
+
+  local file = vim.api.nvim_buf_get_name(0)
+  return file ~= "" and vim.fn.fnamemodify(file, ":p:h") or vim.uv.cwd()
+end
+
 return {
   "stevearc/oil.nvim",
   lazy = true,
   cmd = "Oil",
   dependencies = { "nvim-mini/mini.icons" },
   keys = {
-    { "<leader>o", "<cmd>Oil<cr>", desc = "Open Oil file editor" },
+    {
+      "<leader>oo",
+      function()
+        require("oil").open(vim.uv.cwd())
+      end,
+      desc = "Open Oil at launch cwd",
+    },
+    {
+      "<leader>od",
+      function()
+        require("oil").open(oil_or_current_dir())
+      end,
+      desc = "Open Oil at current file dir",
+    },
+
   },
   opts = {
     -- Keep nvim-tree as the primary/default explorer.

@@ -41,7 +41,7 @@ The **final global UX layer** is therefore the `keymaps/` submodules; plugin `ke
 | Change language-specific tooling | `lua/plugins/typescript.lua`, `lua/plugins/java.lua`, `lua/plugins/rust.lua` |
 | Change completion | `lua/plugins/blink.lua` |
 | Change formatting | `lua/plugins/conform.lua` (format keys live here) |
-| Change file explorer behavior | `lua/plugins/nvim-tree.lua` (keys live in the plugin spec) |
+| Change file explorer behavior | `lua/plugins/nvim-tree.lua` for tree explorer; `lua/plugins/oil.lua` for editable directory buffers |
 
 For deeper file-by-file ownership notes, see `CLAUDE.md` and `AGENTS.md`.
 

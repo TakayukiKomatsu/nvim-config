@@ -142,6 +142,7 @@ return {
           miniclue.gen_clues.z(),
 
           { mode = "n", keys = "<Leader><Tab>", desc = "+tabs" },
+          { mode = "n", keys = "<Leader>a", desc = "+aerial / symbols" },
           { mode = { "n", "x" }, keys = "<Leader>b", desc = "+buffers" },
           { mode = "n", keys = "<Leader>c", desc = "+code" },
           { mode = "n", keys = "<Leader>d", desc = "+debug" },
@@ -153,6 +154,7 @@ return {
           { mode = "n", keys = "<Leader>l", desc = "+lists" },
           { mode = "n", keys = "<Leader>m", desc = "+edit" },
           { mode = "n", keys = "<Leader>n", desc = "+npm" },
+          { mode = "n", keys = "<Leader>o", desc = "+oil" },
           { mode = "n", keys = "<Leader>q", desc = "+quit / quickfix / session" },
           { mode = "n", keys = "<Leader>r", desc = "+refactor / rust" },
           { mode = "n", keys = "<Leader>R", desc = "+rust (LSP)" },
