@@ -61,7 +61,7 @@ return {
       },
     },
     keys = {
- c    { "<leader>rct", function() require("crates").toggle() end, desc = "Toggle crate info" },
+      { "<leader>rct", function() require("crates").toggle() end, desc = "Toggle crate info" },
       { "<leader>rcr", function() require("crates").reload() end, desc = "Reload crates" },
       { "<leader>rcv", function() require("crates").show_versions_popup() end, desc = "Show versions" },
       { "<leader>rcf", function() require("crates").show_features_popup() end, desc = "Show features" },
