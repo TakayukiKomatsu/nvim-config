@@ -4,13 +4,13 @@ return {
     keys = {
       {
         "<leader>cf",
-        function() require("conform").format({ async = true, lsp_fallback = true }) end,
+        function() require("conform").format({ async = true, lsp_format = "fallback" }) end,
         mode = { "n", "v" },
         desc = "Format buffer",
       },
       {
         "<A-F>",
-        function() require("conform").format({ async = true, lsp_fallback = true }) end,
+        function() require("conform").format({ async = true, lsp_format = "fallback" }) end,
         mode = { "n", "v" },
         desc = "Format buffer (⌥F)",
       },
@@ -52,6 +52,7 @@ return {
         markdown        = { "prettierd", "prettier", stop_after_first = true },
         graphql         = { "prettierd", "prettier", stop_after_first = true },
         go              = { "goimports", "gofumpt" },
+        rust            = { "rustfmt" },
         java            = { "google-java-format" },
       })
       return opts

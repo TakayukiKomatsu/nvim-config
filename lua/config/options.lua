@@ -65,6 +65,29 @@ opt.mousescroll = "ver:3,hor:6" -- smooth trackpad scroll
 opt.title = true
 opt.titlestring = "%t - Neovim"
 
+-- Neovide GUI setup. Mirrors terminal prefs: JetBrainsMono Nerd Font at size 19,
+-- Option/Alt mappings enabled, and padding similar to WezTerm.
+if vim.g.neovide then
+  vim.o.guifont = "JetBrainsMono Nerd Font:h19"
+  vim.g.neovide_input_macos_option_key_is_meta = "both"
+  vim.g.neovide_hide_mouse_when_typing = true
+  vim.g.neovide_remember_window_size = true
+  vim.g.neovide_position_animation_length = 0.12
+  vim.g.neovide_fullscreen = true
+  vim.g.neovide_padding_top = 10
+  vim.g.neovide_padding_bottom = 10
+  vim.g.neovide_padding_right = 10
+  vim.g.neovide_padding_left = 10
+  vim.g.neovide_scroll_animation_length = 0.15
+  vim.g.neovide_cursor_animation_length = 0.08
+  vim.g.neovide_cursor_vfx_mode = "railgun"
+  vim.g.neovide_refresh_rate = 120
+  vim.g.neovide_refresh_rate_idle = 5
+  vim.g.neovide_floating_shadow = true
+  vim.g.neovide_floating_blur_amount_x = 2.0
+  vim.g.neovide_floating_blur_amount_y = 2.0
+end
+
 -- ═══════════════════════════════════════════════════════════════
 -- UI
 -- ═══════════════════════════════════════════════════════════════

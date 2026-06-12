@@ -24,12 +24,13 @@ vim.diagnostic.config({
 
 local mac_group = vim.api.nvim_create_augroup("MacOptimizations", { clear = true })
 
--- GUI font for Mac GUI frontends (VimR, Neovide, etc.)
+-- GUI font fallback for Mac GUI frontends (VimR, etc.). Neovide is configured
+-- earlier in options.lua so its startup-only globals are set in time.
 vim.api.nvim_create_autocmd("VimEnter", {
   group = mac_group,
   callback = function()
-    if vim.fn.has("gui_running") == 1 then
-      vim.o.guifont = "SF Mono:h14"
+    if vim.fn.has("gui_running") == 1 and not vim.g.neovide then
+      vim.o.guifont = "JetBrainsMono Nerd Font:h19"
     end
   end,
   desc = "Set Mac-optimized GUI font",
