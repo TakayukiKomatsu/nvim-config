@@ -1,17 +1,18 @@
 local trigger_text = ";"
 local escaped_trigger = vim.pesc(trigger_text)
 
+-- Finds an explicitly triggered snippet such as:
+--   ;func
+--   ;my_snippet
+--   ;react-component
+--
 -- Returns:
---   trigger_pos: one-based byte position of the snippet trigger
+--   trigger_pos: one-based byte position of the semicolon
 --   cursor_col:  zero-based byte position of the cursor
 local function get_snippet_trigger()
   local cursor_col = vim.api.nvim_win_get_cursor(0)[2]
   local before_cursor = vim.api.nvim_get_current_line():sub(1, cursor_col)
 
-  -- Matches:
-  --   ;func
-  --   ;my_snippet
-  --   ;react-component
   local trigger_pos = before_cursor:find(escaped_trigger .. "[%w_%-]*$")
 
   return trigger_pos, cursor_col
@@ -20,7 +21,7 @@ end
 return {
   "saghen/blink.cmp",
 
-  -- Stay on Blink's stable v1 series.
+  -- Stay on the stable Blink v1 series.
   version = "1.*",
   enabled = true,
 
@@ -39,10 +40,7 @@ return {
             },
 
             gopls = {
-              -- Align Go types/signatures to the right:
-              --
-              --   value                         float64
-              --   Printf(format string, a ...any) (n int, err error)
+              -- Align Go types and return values to the right.
               align_type_to_right = true,
               add_colon_before_type = false,
               preserve_type_when_truncate = true,
@@ -94,6 +92,7 @@ return {
               arguments_hl = "@comment",
             },
 
+            -- Apply basic kind highlighting to unsupported LSPs.
             fallback = true,
             fallback_extra_info_hl = "@comment",
           },
@@ -106,11 +105,10 @@ return {
   },
 
   init = function()
-    -- colorful-menu recommends keeping matched text bold without imposing
-    -- a separate foreground color.
     local group = vim.api.nvim_create_augroup("BlinkCmpNvChadStyle", { clear = true })
 
     local function apply_highlights()
+      -- Keep matched completion characters bold without forcing a color.
       vim.api.nvim_set_hl(0, "BlinkCmpLabelMatch", {
         bold = true,
       })
@@ -130,21 +128,31 @@ return {
     ---------------------------------------------------------------------------
 
     opts.sources = vim.tbl_deep_extend("force", opts.sources or {}, {
+      -- Allow providers to return results when the keyword after a trigger
+      -- character has zero characters.
+      --
+      -- This is important for:
+      --   math.
+      --   object.
+      --   pointer->
+      min_keyword_length = 0,
+
       providers = {
         lsp = {
           name = "LSP",
           module = "blink.cmp.sources.lsp",
           enabled = true,
 
+          -- Required to show results immediately after `math.`.
           min_keyword_length = 0,
+
           score_offset = 90,
 
-          -- Empty fallbacks means buffer results may appear alongside LSP
-          -- results instead of only when the LSP returns nothing.
+          -- Show buffer results alongside LSP results.
           fallbacks = {},
 
           opts = {
-            -- Built-in Tailwind/CSS completion color preview.
+            -- Built-in Tailwind/CSS color preview.
             tailwind_color_icon = "■",
           },
         },
@@ -176,7 +184,7 @@ return {
           enabled = true,
 
           max_items = 15,
-          min_keyword_length = 0,
+          min_keyword_length = 1,
           score_offset = 85,
 
           opts = {
@@ -186,14 +194,13 @@ return {
             use_label_description = true,
           },
 
-          -- Only show snippets after the explicit `;` trigger.
+          -- Only show snippets after typing the explicit `;` trigger.
           should_show_items = function()
             local trigger_pos = get_snippet_trigger()
             return trigger_pos ~= nil
           end,
 
-          -- Replace the entire `;snippet_name` text when accepting,
-          -- removing the leading semicolon.
+          -- Remove the leading semicolon when accepting a snippet.
           transform_items = function(_, items)
             local trigger_pos, cursor_col = get_snippet_trigger()
 
@@ -267,10 +274,8 @@ return {
       "emoji",
     }
 
-    -- Important:
-    -- An older version of this config used `kind = "LSP"`. Because LazyVim
-    -- deeply merges plugin options, that value can survive after removal.
-    -- Explicitly clear it so Blink displays Function, Variable, Module, etc.
+    -- Ensure an older `kind = "LSP"` override does not replace real kinds
+    -- such as Function, Variable, Module and Constant.
     opts.sources.providers.lsp.kind = nil
 
     ---------------------------------------------------------------------------
@@ -278,10 +283,60 @@ return {
     ---------------------------------------------------------------------------
 
     opts.completion = vim.tbl_deep_extend("force", opts.completion or {}, {
+      keyword = {
+        range = "prefix",
+      },
+
       accept = {
         auto_brackets = {
           enabled = true,
         },
+      },
+
+      -----------------------------------------------------------------------
+      -- Trigger behavior
+      -----------------------------------------------------------------------
+
+      trigger = {
+        -- Prefetch candidates when entering Insert mode.
+        prefetch_on_insert = true,
+
+        -- Show while typing regular identifiers.
+        show_on_keyword = true,
+
+        -- Show immediately after an LSP trigger character:
+        --
+        --   math.
+        --   object.
+        --   pointer->
+        show_on_trigger_character = true,
+
+        -- Reopen after accepting an item whose result ends in a trigger
+        -- character.
+        show_on_accept_on_trigger_character = true,
+
+        -- Reopen when entering Insert mode with the cursor immediately after
+        -- a trigger character.
+        show_on_insert_on_trigger_character = true,
+
+        -- Do not automatically show merely because Insert mode was entered.
+        show_on_insert = false,
+
+        -- Keep completion hidden on whitespace.
+        show_on_blocked_trigger_characters = {
+          " ",
+          "\n",
+          "\t",
+        },
+
+        show_on_x_blocked_trigger_characters = {
+          "'",
+          '"',
+          "(",
+        },
+
+        -- Avoid opening completion while jumping through snippet fields.
+        show_in_snippet = false,
       },
 
       -----------------------------------------------------------------------
@@ -325,8 +380,8 @@ return {
           gap = 1,
           snippet_indicator = "~",
 
-          -- colorful-menu already combines label, label detail,
-          -- type/signature and label description.
+          -- colorful-menu combines the label, parameters, type information
+          -- and label description.
           columns = {
             {
               "kind_icon",
@@ -396,14 +451,14 @@ return {
       },
 
       -----------------------------------------------------------------------
-      -- Documentation
+      -- Documentation window
       -----------------------------------------------------------------------
 
       documentation = {
         auto_show = true,
         auto_show_delay_ms = 80,
 
-        -- Blink requires this value to be at least 50.
+        -- Blink requires this to be at least 50.
         update_delay_ms = 50,
 
         treesitter_highlighting = true,
@@ -411,8 +466,6 @@ return {
         window = {
           border = "rounded",
 
-          -- A wider minimum gives the popup the larger NvChad-like shape,
-          -- even when the LSP only returns a short description.
           min_width = 42,
           max_width = 80,
           max_height = 20,
@@ -427,7 +480,7 @@ return {
             "Search:None",
           }, ","),
 
-          -- Prefer documentation beside the menu.
+          -- Prefer displaying documentation beside the completion menu.
           direction_priority = {
             menu_north = {
               "e",
@@ -452,10 +505,10 @@ return {
 
       list = {
         selection = {
-          -- Select the first entry so documentation appears immediately.
+          -- Select the first item so documentation appears immediately.
           preselect = true,
 
-          -- Do not modify the buffer until the entry is accepted.
+          -- Do not alter the buffer until completion is accepted.
           auto_insert = false,
         },
       },
@@ -468,11 +521,6 @@ return {
 
         show_with_menu = true,
         show_without_menu = false,
-      },
-
-      trigger = {
-        -- Avoid reopening completion while navigating snippet placeholders.
-        show_in_snippet = false,
       },
     })
 
@@ -497,10 +545,15 @@ return {
 
       trigger = {
         enabled = true,
+
         show_on_keyword = false,
         show_on_trigger_character = true,
+
         show_on_insert = false,
         show_on_insert_on_trigger_character = true,
+
+        blocked_trigger_characters = {},
+        blocked_retrigger_characters = {},
       },
 
       window = {
@@ -513,7 +566,7 @@ return {
         scrollbar = false,
         treesitter_highlighting = true,
 
-        -- Show parameter documentation when the LSP supplies it.
+        -- Include parameter documentation when the LSP provides it.
         show_documentation = true,
 
         direction_priority = {
@@ -566,7 +619,7 @@ return {
         "fallback_to_mappings",
       },
 
-      -- Scroll documentation.
+      -- Scroll completion documentation.
       ["<C-b>"] = {
         "scroll_documentation_up",
         "fallback",
@@ -583,14 +636,15 @@ return {
         "fallback",
       },
 
-      -- Manually show completion/documentation.
+      -- Manually show completion. When completion is already visible,
+      -- show or hide its documentation.
       ["<C-space>"] = {
         "show",
         "show_documentation",
         "hide_documentation",
       },
 
-      -- Toggle documentation for the selected entry.
+      -- Toggle documentation.
       ["<C-e>"] = {
         "show_documentation",
         "hide_documentation",
@@ -604,7 +658,7 @@ return {
         "fallback",
       },
 
-      -- Hide the completion popup.
+      -- Close completion.
       ["<Esc>"] = {
         "hide",
         "fallback",
@@ -668,6 +722,11 @@ return {
       },
 
       completion = {
+        trigger = {
+          show_on_blocked_trigger_characters = {},
+          show_on_x_blocked_trigger_characters = {},
+        },
+
         menu = {
           auto_show = true,
         },
@@ -677,6 +736,10 @@ return {
             preselect = false,
             auto_insert = false,
           },
+        },
+
+        ghost_text = {
+          enabled = true,
         },
       },
     })
