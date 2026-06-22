@@ -13,25 +13,55 @@ local function get_snippet_trigger()
   local cursor_col = vim.api.nvim_win_get_cursor(0)[2]
   local before_cursor = vim.api.nvim_get_current_line():sub(1, cursor_col)
 
-  local trigger_pos = before_cursor:find(escaped_trigger .. "[%w_%-]*$")
+  local trigger_pos = before_cursor:find(
+    escaped_trigger .. "[%w_%-]*$"
+  )
 
   return trigger_pos, cursor_col
+end
+
+-- Keeps additional sources added by LazyVim or other plugins, while ensuring
+-- our required sources exist and removing the old emoji source.
+local function merge_default_sources(existing, required)
+  local merged = {}
+  local seen = {}
+
+  local function add(source)
+    if source == "emoji" or seen[source] then
+      return
+    end
+
+    seen[source] = true
+    table.insert(merged, source)
+  end
+
+  if type(existing) == "table" then
+    for _, source in ipairs(existing) do
+      add(source)
+    end
+  end
+
+  for _, source in ipairs(required) do
+    add(source)
+  end
+
+  return merged
 end
 
 return {
   "saghen/blink.cmp",
 
-  -- Stay on the stable Blink v1 series.
+  -- Stay on Blink's stable v1 series.
   version = "1.*",
   enabled = true,
 
   dependencies = {
     "L3MON4D3/LuaSnip",
     "rafamadriz/friendly-snippets",
-    "moyiz/blink-emoji.nvim",
 
     {
       "xzbdmw/colorful-menu.nvim",
+
       config = function()
         require("colorful-menu").setup({
           ls = {
@@ -92,7 +122,7 @@ return {
               arguments_hl = "@comment",
             },
 
-            -- Apply basic kind highlighting to unsupported LSPs.
+            -- Apply basic highlighting to unsupported language servers.
             fallback = true,
             fallback_extra_info_hl = "@comment",
           },
@@ -104,484 +134,566 @@ return {
     },
   },
 
-  init = function()
-    local group = vim.api.nvim_create_augroup("BlinkCmpNvChadStyle", { clear = true })
+  opts = function(_, opts)
+    ---------------------------------------------------------------------------
+    -- Highlights
+    ---------------------------------------------------------------------------
+
+    local highlight_group = vim.api.nvim_create_augroup(
+      "BlinkCmpCustomHighlights",
+      { clear = true }
+    )
 
     local function apply_highlights()
-      -- Keep matched completion characters bold without forcing a color.
-      vim.api.nvim_set_hl(0, "BlinkCmpLabelMatch", {
-        bold = true,
-      })
+      -- Preserve the colorscheme's foreground while making fuzzy matches bold.
+      local ok, current = pcall(
+        vim.api.nvim_get_hl,
+        0,
+        {
+          name = "BlinkCmpLabelMatch",
+          link = false,
+        }
+      )
+
+      if not ok then
+        current = {}
+      end
+
+      current.bold = true
+
+      vim.api.nvim_set_hl(
+        0,
+        "BlinkCmpLabelMatch",
+        current
+      )
     end
 
     vim.api.nvim_create_autocmd("ColorScheme", {
-      group = group,
+      group = highlight_group,
       callback = apply_highlights,
     })
 
     vim.schedule(apply_highlights)
-  end,
 
-  opts = function(_, opts)
     ---------------------------------------------------------------------------
     -- Sources
     ---------------------------------------------------------------------------
 
-    opts.sources = vim.tbl_deep_extend("force", opts.sources or {}, {
-      -- Allow providers to return results when the keyword after a trigger
-      -- character has zero characters.
-      --
-      -- This is important for:
-      --   math.
-      --   object.
-      --   pointer->
-      min_keyword_length = 0,
+    local existing_default_sources = opts.sources
+      and opts.sources.default
+      or nil
 
-      providers = {
-        lsp = {
-          name = "LSP",
-          module = "blink.cmp.sources.lsp",
-          enabled = true,
+    opts.sources = vim.tbl_deep_extend(
+      "force",
+      opts.sources or {},
+      {
+        -- Allow providers to return results when there are zero characters
+        -- after an LSP trigger character:
+        --
+        --   math.
+        --   object.
+        --   pointer->
+        min_keyword_length = 0,
 
-          -- Required to show results immediately after `math.`.
-          min_keyword_length = 0,
+        providers = {
+          lsp = {
+            name = "LSP",
+            module = "blink.cmp.sources.lsp",
+            enabled = true,
 
-          score_offset = 90,
+            -- Required for completion immediately after `math.`.
+            min_keyword_length = 0,
 
-          -- Show buffer results alongside LSP results.
-          fallbacks = {},
+            -- Prefer semantic LSP completions without overpowering Blink's
+            -- fuzzy score, frecency and proximity ranking.
+            score_offset = 4,
 
-          opts = {
-            -- Built-in Tailwind/CSS color preview.
-            tailwind_color_icon = "■",
+            -- Buffer words only appear if the LSP and other providers using
+            -- this fallback return no candidates.
+            fallbacks = {
+              "buffer",
+            },
+
+            opts = {
+              -- Built-in Tailwind/CSS completion color preview.
+              tailwind_color_icon = "■",
+            },
           },
-        },
 
-        path = {
-          name = "Path",
-          module = "blink.cmp.sources.path",
-          enabled = true,
+          path = {
+            name = "Path",
+            module = "blink.cmp.sources.path",
+            enabled = true,
 
-          min_keyword_length = 0,
-          score_offset = 25,
-          fallbacks = {},
+            min_keyword_length = 0,
+            score_offset = 2,
 
-          opts = {
-            trailing_slash = false,
-            label_trailing_slash = true,
-            show_hidden_files_by_default = true,
+            fallbacks = {
+              "buffer",
+            },
 
-            -- Resolve relative paths from the current file's directory.
-            get_cwd = function(context)
-              return vim.fn.expand(("#%d:p:h"):format(context.bufnr))
+            opts = {
+              trailing_slash = false,
+              label_trailing_slash = true,
+              show_hidden_files_by_default = true,
+
+              -- Resolve relative paths from the current file's directory.
+              get_cwd = function(context)
+                return vim.fn.expand(
+                  ("#%d:p:h"):format(context.bufnr)
+                )
+              end,
+            },
+          },
+
+          snippets = {
+            name = "Snippets",
+            module = "blink.cmp.sources.snippets",
+            enabled = true,
+
+            max_items = 15,
+            min_keyword_length = 1,
+            score_offset = 3,
+
+            opts = {
+              use_show_condition = true,
+              show_autosnippets = true,
+              prefer_doc_trig = false,
+              use_label_description = true,
+            },
+
+            -- Only show snippets after the explicit `;` trigger.
+            should_show_items = function()
+              local trigger_pos = get_snippet_trigger()
+              return trigger_pos ~= nil
             end,
-          },
-        },
 
-        snippets = {
-          name = "Snippets",
-          module = "blink.cmp.sources.snippets",
-          enabled = true,
+            -- Remove the leading semicolon and typed trigger when accepting
+            -- the selected snippet.
+            transform_items = function(_, items)
+              local trigger_pos, cursor_col =
+                get_snippet_trigger()
 
-          max_items = 15,
-          min_keyword_length = 1,
-          score_offset = 85,
+              if not trigger_pos then
+                return items
+              end
 
-          opts = {
-            use_show_condition = true,
-            show_autosnippets = true,
-            prefer_doc_trig = false,
-            use_label_description = true,
-          },
+              local line =
+                vim.api.nvim_win_get_cursor(0)[1] - 1
 
-          -- Only show snippets after typing the explicit `;` trigger.
-          should_show_items = function()
-            local trigger_pos = get_snippet_trigger()
-            return trigger_pos ~= nil
-          end,
+              for _, item in ipairs(items) do
+                local new_text = (
+                  item.textEdit
+                  and item.textEdit.newText
+                )
+                  or item.insertText
+                  or item.label
 
-          -- Remove the leading semicolon when accepting a snippet.
-          transform_items = function(_, items)
-            local trigger_pos, cursor_col = get_snippet_trigger()
+                item.textEdit = {
+                  newText = new_text,
 
-            if not trigger_pos then
+                  range = {
+                    start = {
+                      line = line,
+                      character = trigger_pos - 1,
+                    },
+
+                    ["end"] = {
+                      line = line,
+                      character = cursor_col,
+                    },
+                  },
+                }
+              end
+
               return items
-            end
-
-            local line = vim.api.nvim_win_get_cursor(0)[1] - 1
-
-            for _, item in ipairs(items) do
-              local new_text = (item.textEdit and item.textEdit.newText) or item.insertText or item.label
-
-              item.textEdit = {
-                newText = new_text,
-                range = {
-                  start = {
-                    line = line,
-                    character = trigger_pos - 1,
-                  },
-                  ["end"] = {
-                    line = line,
-                    character = cursor_col,
-                  },
-                },
-              }
-            end
-
-            return items
-          end,
-        },
-
-        buffer = {
-          name = "Buffer",
-          module = "blink.cmp.sources.buffer",
-          enabled = true,
-
-          max_items = 5,
-          min_keyword_length = 4,
-
-          -- Keep plain buffer words below semantic LSP results.
-          score_offset = -5,
-        },
-
-        emoji = {
-          name = "Emoji",
-          module = "blink-emoji",
-          enabled = true,
-
-          min_keyword_length = 2,
-          score_offset = 20,
-
-          opts = {
-            insert = true,
-
-            -- Trigger emoji completion with:
-            --   :smile
-            --   :heart
-            trigger = function()
-              return { ":" }
             end,
           },
-        },
-      },
-    })
 
-    opts.sources.default = {
-      "lsp",
-      "path",
-      "snippets",
+          buffer = {
+            name = "Buffer",
+            module = "blink.cmp.sources.buffer",
+            enabled = true,
+
+            max_items = 5,
+            min_keyword_length = 4,
+
+            -- Keep ordinary buffer words below semantic candidates.
+            score_offset = -3,
+          },
+        },
+      }
+    )
+
+    -- Force clean fallback lists in case a previous LazyVim configuration
+    -- added or retained additional entries during table merging.
+    opts.sources.providers.lsp.fallbacks = {
       "buffer",
-      "emoji",
     }
 
-    -- Ensure an older `kind = "LSP"` override does not replace real kinds
-    -- such as Function, Variable, Module and Constant.
+    opts.sources.providers.path.fallbacks = {
+      "buffer",
+    }
+
+    opts.sources.default = merge_default_sources(
+      existing_default_sources,
+      {
+        "lsp",
+        "path",
+        "snippets",
+        "buffer",
+      }
+    )
+
+    -- Remove the retired emoji provider if another merged configuration left
+    -- it behind.
+    opts.sources.providers.emoji = nil
+
+    -- Prevent an older `kind = "LSP"` override from replacing real kinds such
+    -- as Function, Variable, Module and Constant.
     opts.sources.providers.lsp.kind = nil
+    opts.sources.providers.lsp.name = "LSP"
 
     ---------------------------------------------------------------------------
     -- Completion
     ---------------------------------------------------------------------------
 
-    opts.completion = vim.tbl_deep_extend("force", opts.completion or {}, {
-      keyword = {
-        range = "prefix",
-      },
-
-      accept = {
-        auto_brackets = {
-          enabled = true,
-        },
-      },
-
-      -----------------------------------------------------------------------
-      -- Trigger behavior
-      -----------------------------------------------------------------------
-
-      trigger = {
-        -- Prefetch candidates when entering Insert mode.
-        prefetch_on_insert = true,
-
-        -- Show while typing regular identifiers.
-        show_on_keyword = true,
-
-        -- Show immediately after an LSP trigger character:
-        --
-        --   math.
-        --   object.
-        --   pointer->
-        show_on_trigger_character = true,
-
-        -- Reopen after accepting an item whose result ends in a trigger
-        -- character.
-        show_on_accept_on_trigger_character = true,
-
-        -- Reopen when entering Insert mode with the cursor immediately after
-        -- a trigger character.
-        show_on_insert_on_trigger_character = true,
-
-        -- Do not automatically show merely because Insert mode was entered.
-        show_on_insert = false,
-
-        -- Keep completion hidden on whitespace.
-        show_on_blocked_trigger_characters = {
-          " ",
-          "\n",
-          "\t",
+    opts.completion = vim.tbl_deep_extend(
+      "force",
+      opts.completion or {},
+      {
+        keyword = {
+          range = "prefix",
         },
 
-        show_on_x_blocked_trigger_characters = {
-          "'",
-          '"',
-          "(",
-        },
-
-        -- Avoid opening completion while jumping through snippet fields.
-        show_in_snippet = false,
-      },
-
-      -----------------------------------------------------------------------
-      -- Completion menu
-      -----------------------------------------------------------------------
-
-      menu = {
-        border = "rounded",
-
-        min_width = 20,
-        max_height = 12,
-        scrolloff = 1,
-
-        scrollbar = true,
-        winblend = 0,
-
-        direction_priority = {
-          "s",
-          "n",
-        },
-
-        winhighlight = table.concat({
-          "Normal:BlinkCmpMenu",
-          "FloatBorder:BlinkCmpMenuBorder",
-          "CursorLine:BlinkCmpMenuSelection",
-          "Search:None",
-        }, ","),
-
-        auto_show = function(ctx)
-          return ctx.mode ~= "cmdline" and vim.bo.buftype ~= "prompt"
-        end,
-
-        draw = {
-          align_to = "label",
-
-          padding = {
-            0,
-            1,
-          },
-
-          gap = 1,
-          snippet_indicator = "~",
-
-          -- colorful-menu combines the label, parameters, type information
-          -- and label description.
-          columns = {
-            {
-              "kind_icon",
-            },
-            {
-              "label",
-              gap = 1,
-            },
-            {
-              "kind",
-            },
-          },
-
-          components = {
-            kind_icon = {
-              ellipsis = false,
-
-              text = function(ctx)
-                return ctx.kind_icon .. ctx.icon_gap
-              end,
-
-              highlight = function(ctx)
-                return {
-                  {
-                    group = ctx.kind_hl,
-                    priority = 20000,
-                  },
-                }
-              end,
-            },
-
-            label = {
-              ellipsis = true,
-
-              width = {
-                fill = true,
-                max = 60,
-              },
-
-              text = function(ctx)
-                return require("colorful-menu").blink_components_text(ctx)
-              end,
-
-              highlight = function(ctx)
-                return require("colorful-menu").blink_components_highlight(ctx)
-              end,
-            },
-
-            kind = {
-              ellipsis = false,
-
-              width = {
-                min = 7,
-                max = 12,
-              },
-
-              text = function(ctx)
-                return ctx.kind
-              end,
-
-              highlight = function(ctx)
-                return ctx.kind_hl
-              end,
-            },
+        accept = {
+          auto_brackets = {
+            enabled = true,
           },
         },
-      },
 
-      -----------------------------------------------------------------------
-      -- Documentation window
-      -----------------------------------------------------------------------
+        -----------------------------------------------------------------------
+        -- Trigger behavior
+        -----------------------------------------------------------------------
 
-      documentation = {
-        auto_show = true,
-        auto_show_delay_ms = 80,
+        trigger = {
+          -- Prepare completion candidates when entering Insert mode.
+          prefetch_on_insert = true,
 
-        -- Blink requires this to be at least 50.
-        update_delay_ms = 50,
+          -- Show while typing ordinary identifiers.
+          show_on_keyword = true,
 
-        treesitter_highlighting = true,
+          -- Show after LSP trigger characters such as `.`.
+          show_on_trigger_character = true,
 
-        window = {
+          -- Reopen after accepting an item that ends with a trigger character.
+          show_on_accept_on_trigger_character = true,
+
+          -- Reopen when entering Insert mode immediately after a trigger
+          -- character.
+          show_on_insert_on_trigger_character = true,
+
+          -- Do not show merely because Insert mode was entered.
+          show_on_insert = false,
+
+          -- Avoid opening on whitespace.
+          show_on_blocked_trigger_characters = {
+            " ",
+            "\n",
+            "\t",
+          },
+
+          show_on_x_blocked_trigger_characters = {
+            "'",
+            '"',
+            "(",
+          },
+
+          -- Prevent completion from fighting with active snippet placeholders.
+          show_in_snippet = false,
+        },
+
+        -----------------------------------------------------------------------
+        -- Completion menu
+        -----------------------------------------------------------------------
+
+        menu = {
           border = "rounded",
 
-          min_width = 42,
-          max_width = 80,
-          max_height = 20,
+          min_width = 20,
+          max_height = 12,
+          scrolloff = 1,
 
           scrollbar = true,
           winblend = 0,
 
+          direction_priority = {
+            "s",
+            "n",
+          },
+
           winhighlight = table.concat({
-            "Normal:BlinkCmpDoc",
-            "FloatBorder:BlinkCmpDocBorder",
-            "EndOfBuffer:BlinkCmpDoc",
+            "Normal:BlinkCmpMenu",
+            "FloatBorder:BlinkCmpMenuBorder",
+            "CursorLine:BlinkCmpMenuSelection",
             "Search:None",
           }, ","),
 
-          -- Prefer displaying documentation beside the completion menu.
-          direction_priority = {
-            menu_north = {
-              "e",
-              "w",
-              "n",
-              "s",
+          auto_show = function(ctx)
+            return ctx.mode ~= "cmdline"
+              and vim.bo.buftype ~= "prompt"
+          end,
+
+          draw = {
+            align_to = "label",
+
+            padding = {
+              0,
+              1,
             },
 
-            menu_south = {
-              "e",
-              "w",
-              "s",
-              "n",
+            gap = 1,
+            snippet_indicator = "~",
+
+            -- Colorful Menu already combines the label, label detail, type,
+            -- parameters and label description.
+            columns = {
+              {
+                "kind_icon",
+              },
+
+              {
+                "label",
+                gap = 1,
+              },
+
+              {
+                "kind",
+              },
+            },
+
+            components = {
+              kind_icon = {
+                ellipsis = false,
+
+                text = function(ctx)
+                  return ctx.kind_icon .. ctx.icon_gap
+                end,
+
+                highlight = function(ctx)
+                  return {
+                    {
+                      group = ctx.kind_hl,
+                      priority = 20000,
+                    },
+                  }
+                end,
+              },
+
+              label = {
+                ellipsis = true,
+
+                width = {
+                  fill = true,
+                  max = 60,
+                },
+
+                text = function(ctx)
+                  return require(
+                    "colorful-menu"
+                  ).blink_components_text(ctx)
+                end,
+
+                highlight = function(ctx)
+                  return require(
+                    "colorful-menu"
+                  ).blink_components_highlight(ctx)
+                end,
+              },
+
+              kind = {
+                ellipsis = false,
+
+                width = {
+                  min = 7,
+                  max = 12,
+                },
+
+                text = function(ctx)
+                  return ctx.kind
+                end,
+
+                highlight = function(ctx)
+                  return ctx.kind_hl
+                end,
+              },
             },
           },
         },
-      },
 
-      -----------------------------------------------------------------------
-      -- Selection and ghost text
-      -----------------------------------------------------------------------
+        -----------------------------------------------------------------------
+        -- Documentation window
+        -----------------------------------------------------------------------
 
-      list = {
-        selection = {
-          -- Select the first item so documentation appears immediately.
-          preselect = true,
+        documentation = {
+          auto_show = true,
 
-          -- Do not alter the buffer until completion is accepted.
-          auto_insert = false,
+          -- A slightly calmer delay prevents the documentation window from
+          -- flashing while quickly moving through completion candidates.
+          auto_show_delay_ms = 150,
+
+          -- Blink requires this to be at least 50.
+          update_delay_ms = 50,
+
+          treesitter_highlighting = true,
+
+          window = {
+            border = "rounded",
+
+            min_width = 42,
+            max_width = 80,
+            max_height = 20,
+
+            scrollbar = true,
+            winblend = 0,
+
+            winhighlight = table.concat({
+              "Normal:BlinkCmpDoc",
+              "FloatBorder:BlinkCmpDocBorder",
+              "EndOfBuffer:BlinkCmpDoc",
+              "Search:None",
+            }, ","),
+
+            -- Prefer showing documentation beside the completion menu.
+            direction_priority = {
+              menu_north = {
+                "e",
+                "w",
+                "n",
+                "s",
+              },
+
+              menu_south = {
+                "e",
+                "w",
+                "s",
+                "n",
+              },
+            },
+          },
         },
-      },
 
-      ghost_text = {
-        enabled = true,
+        -----------------------------------------------------------------------
+        -- Selection
+        -----------------------------------------------------------------------
 
-        show_with_selection = true,
-        show_without_selection = false,
+        list = {
+          max_items = 100,
 
-        show_with_menu = true,
-        show_without_menu = false,
-      },
-    })
+          selection = {
+            -- Normally select the first item so documentation appears
+            -- immediately. Do not preselect while a forward snippet jump is
+            -- available, preventing Super-Tab from accepting an unrelated
+            -- completion instead of moving to the next placeholder.
+            preselect = function()
+              return not require("blink.cmp").snippet_active({
+                direction = 1,
+              })
+            end,
+
+            -- Never modify the buffer until an item is explicitly accepted.
+            auto_insert = false,
+          },
+
+          cycle = {
+            from_bottom = true,
+            from_top = true,
+          },
+        },
+
+        -----------------------------------------------------------------------
+        -- Ghost text
+        -----------------------------------------------------------------------
+
+        ghost_text = {
+          enabled = true,
+
+          show_with_selection = true,
+          show_without_selection = false,
+
+          show_with_menu = true,
+          show_without_menu = false,
+        },
+      }
+    )
 
     ---------------------------------------------------------------------------
     -- Ranking
     ---------------------------------------------------------------------------
 
-    opts.fuzzy = vim.tbl_deep_extend("force", opts.fuzzy or {}, {
-      sorts = {
-        "exact",
-        "score",
-        "sort_text",
-      },
-    })
+    opts.fuzzy = vim.tbl_deep_extend(
+      "force",
+      opts.fuzzy or {},
+      {
+        sorts = {
+          "exact",
+          "score",
+          "sort_text",
+        },
+      }
+    )
 
     ---------------------------------------------------------------------------
     -- Signature help
     ---------------------------------------------------------------------------
 
-    opts.signature = vim.tbl_deep_extend("force", opts.signature or {}, {
-      enabled = true,
-
-      trigger = {
+    opts.signature = vim.tbl_deep_extend(
+      "force",
+      opts.signature or {},
+      {
         enabled = true,
 
-        show_on_keyword = false,
-        show_on_trigger_character = true,
+        trigger = {
+          enabled = true,
 
-        show_on_insert = false,
-        show_on_insert_on_trigger_character = true,
+          show_on_keyword = false,
+          show_on_trigger_character = true,
 
-        blocked_trigger_characters = {},
-        blocked_retrigger_characters = {},
-      },
+          show_on_insert = false,
+          show_on_insert_on_trigger_character = true,
 
-      window = {
-        border = "rounded",
-
-        min_width = 20,
-        max_width = 80,
-        max_height = 10,
-
-        scrollbar = false,
-        treesitter_highlighting = true,
-
-        -- Include parameter documentation when the LSP provides it.
-        show_documentation = true,
-
-        direction_priority = {
-          "n",
-          "s",
+          blocked_trigger_characters = {},
+          blocked_retrigger_characters = {},
         },
 
-        winblend = 0,
+        window = {
+          border = "rounded",
 
-        winhighlight = table.concat({
-          "Normal:BlinkCmpSignatureHelp",
-          "FloatBorder:BlinkCmpSignatureHelpBorder",
-        }, ","),
-      },
-    })
+          min_width = 20,
+          max_width = 80,
+          max_height = 10,
+
+          scrollbar = false,
+          treesitter_highlighting = true,
+
+          -- Keep signature help compact. Full symbol documentation remains
+          -- available in the completion documentation window.
+          show_documentation = false,
+
+          direction_priority = {
+            "n",
+            "s",
+          },
+
+          winblend = 0,
+
+          winhighlight = table.concat({
+            "Normal:BlinkCmpSignatureHelp",
+            "FloatBorder:BlinkCmpSignatureHelpBorder",
+          }, ","),
+        },
+      }
+    )
 
     ---------------------------------------------------------------------------
     -- LuaSnip
@@ -596,9 +708,14 @@ return {
     ---------------------------------------------------------------------------
 
     opts.keymap = {
+      -- Tab accepts visible completion items, moves through snippet fields,
+      -- and otherwise falls back to normal indentation.
       preset = "super-tab",
 
-      -- Select completion entries.
+      -------------------------------------------------------------------------
+      -- Select completion entries
+      -------------------------------------------------------------------------
+
       ["<Up>"] = {
         "select_prev",
         "fallback",
@@ -619,7 +736,10 @@ return {
         "fallback_to_mappings",
       },
 
-      -- Scroll completion documentation.
+      -------------------------------------------------------------------------
+      -- Completion documentation scrolling
+      -------------------------------------------------------------------------
+
       ["<C-b>"] = {
         "scroll_documentation_up",
         "fallback",
@@ -630,35 +750,47 @@ return {
         "fallback",
       },
 
-      -- Accept the selected completion.
+      -------------------------------------------------------------------------
+      -- Signature-help scrolling
+      -------------------------------------------------------------------------
+
+      ["<C-u>"] = {
+        "scroll_signature_up",
+        "fallback",
+      },
+
+      ["<C-d>"] = {
+        "scroll_signature_down",
+        "fallback",
+      },
+
+      -------------------------------------------------------------------------
+      -- Accept/show/hide
+      -------------------------------------------------------------------------
+
       ["<CR>"] = {
         "accept",
         "fallback",
       },
 
-      -- Manually show completion. When completion is already visible,
-      -- show or hide its documentation.
       ["<C-space>"] = {
         "show",
         "show_documentation",
         "hide_documentation",
       },
 
-      -- Toggle documentation.
+      -- Standard predictable close key.
       ["<C-e>"] = {
-        "show_documentation",
-        "hide_documentation",
+        "hide",
         "fallback",
       },
 
-      -- Toggle signature help.
       ["<C-k>"] = {
         "show_signature",
         "hide_signature",
         "fallback",
       },
 
-      -- Close completion.
       ["<Esc>"] = {
         "hide",
         "fallback",
@@ -669,80 +801,89 @@ return {
     -- Appearance
     ---------------------------------------------------------------------------
 
-    opts.appearance = vim.tbl_deep_extend("force", opts.appearance or {}, {
-      use_nvim_cmp_as_default = false,
-      nerd_font_variant = "mono",
+    opts.appearance = vim.tbl_deep_extend(
+      "force",
+      opts.appearance or {},
+      {
+        use_nvim_cmp_as_default = false,
+        nerd_font_variant = "mono",
 
-      kind_icons = {
-        Text = "󰉿",
-        Method = "󰊕",
-        Function = "󰊕",
-        Constructor = "󰒓",
+        kind_icons = {
+          Text = "󰉿",
+          Method = "󰊕",
+          Function = "󰊕",
+          Constructor = "󰒓",
 
-        Field = "󰜢",
-        Variable = "󰆦",
-        Property = "󰖷",
+          Field = "󰜢",
+          Variable = "󰆦",
+          Property = "󰖷",
 
-        Class = "󰠱",
-        Interface = "󰠱",
-        Struct = "󰠱",
-        Module = "󰅩",
+          Class = "󰠱",
+          Interface = "󰠱",
+          Struct = "󰠱",
+          Module = "󰅩",
 
-        Unit = "󰪚",
-        Value = "󰦨",
-        Enum = "󰦨",
-        EnumMember = "󰦨",
+          Unit = "󰪚",
+          Value = "󰦨",
+          Enum = "󰦨",
+          EnumMember = "󰦨",
 
-        Keyword = "󰻾",
-        Constant = "󰏿",
+          Keyword = "󰻾",
+          Constant = "󰏿",
 
-        Snippet = "󰩫",
-        Color = "󰏘",
-        File = "󰈔",
-        Reference = "󰬲",
-        Folder = "󰉋",
+          Snippet = "󰩫",
+          Color = "󰏘",
+          File = "󰈔",
+          Reference = "󰬲",
+          Folder = "󰉋",
 
-        Event = "󱐋",
-        Operator = "󰪚",
-        TypeParameter = "󰬛",
+          Event = "󱐋",
+          Operator = "󰪚",
+          TypeParameter = "󰬛",
+        },
+      }
+    )
 
-        Emoji = "󰞅",
-      },
-    })
+    -- Remove an old custom emoji icon if it survived a merged config.
+    opts.appearance.kind_icons.Emoji = nil
 
     ---------------------------------------------------------------------------
     -- Command-line completion
     ---------------------------------------------------------------------------
 
-    opts.cmdline = vim.tbl_deep_extend("force", opts.cmdline or {}, {
-      enabled = true,
+    opts.cmdline = vim.tbl_deep_extend(
+      "force",
+      opts.cmdline or {},
+      {
+        enabled = true,
 
-      keymap = {
-        preset = "cmdline",
-      },
-
-      completion = {
-        trigger = {
-          show_on_blocked_trigger_characters = {},
-          show_on_x_blocked_trigger_characters = {},
+        keymap = {
+          preset = "cmdline",
         },
 
-        menu = {
-          auto_show = true,
-        },
+        completion = {
+          trigger = {
+            show_on_blocked_trigger_characters = {},
+            show_on_x_blocked_trigger_characters = {},
+          },
 
-        list = {
-          selection = {
-            preselect = false,
-            auto_insert = false,
+          menu = {
+            auto_show = true,
+          },
+
+          list = {
+            selection = {
+              preselect = false,
+              auto_insert = false,
+            },
+          },
+
+          ghost_text = {
+            enabled = true,
           },
         },
-
-        ghost_text = {
-          enabled = true,
-        },
-      },
-    })
+      }
+    )
 
     return opts
   end,
