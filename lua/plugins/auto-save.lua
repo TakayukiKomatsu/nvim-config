@@ -11,6 +11,15 @@ return {
         defer_save = { "InsertLeave" },
         cancel_deferred_save = { "InsertEnter" },
       },
+      condition = function(buf)
+        -- Oil applies filesystem edits on save; require an explicit manual save
+        -- there so renames/deletes are never triggered by auto-save.
+        if vim.bo[buf].filetype == "oil" then
+          return false
+        end
+
+        return vim.bo[buf].modifiable and vim.bo[buf].buftype == ""
+      end,
       write_all_buffers = false,
       debounce_delay = 1000,
       debug = false,

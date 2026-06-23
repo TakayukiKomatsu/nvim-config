@@ -723,7 +723,9 @@ return {
         "fallback",
       },
 
-      ["<C-k>"] = {
+      -- Keep <C-k> available for insert-mode Up navigation from
+      -- lua/config/keymaps/insert.lua.
+      ["<A-k>"] = {
         "show_signature",
         "hide_signature",
         "fallback",

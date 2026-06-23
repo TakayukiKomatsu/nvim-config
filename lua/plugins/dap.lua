@@ -160,58 +160,8 @@ return {
         end
       end
 
-      -- =====================
-      -- Go (Delve)
-      -- =====================
-      dap.adapters.delve = {
-        type = "server",
-        port = "${port}",
-        executable = {
-          command = "dlv",
-          args = { "dap", "-l", "127.0.0.1:${port}" },
-        },
-      }
-
-      dap.configurations.go = {
-        -- Debug current file
-        {
-          type = "delve",
-          name = "Debug file",
-          request = "launch",
-          program = "${file}",
-        },
-        -- Debug package
-        {
-          type = "delve",
-          name = "Debug package",
-          request = "launch",
-          program = "${fileDirname}",
-        },
-        -- Debug test
-        {
-          type = "delve",
-          name = "Debug test",
-          request = "launch",
-          mode = "test",
-          program = "${file}",
-        },
-        -- Debug test (go.mod)
-        {
-          type = "delve",
-          name = "Debug test (go.mod)",
-          request = "launch",
-          mode = "test",
-          program = "./${relativeFileDirname}",
-        },
-        -- Attach to running process
-        {
-          type = "delve",
-          name = "Attach to process",
-          request = "attach",
-          mode = "local",
-          processId = require("dap.utils").pick_process,
-        },
-      }
+      -- Go debugging is owned by LazyVim's Go extra / nvim-dap-go, avoiding
+      -- duplicate Delve adapter/configuration definitions here.
 
       -- =====================
       -- Python (debugpy)

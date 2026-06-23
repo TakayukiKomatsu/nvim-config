@@ -20,7 +20,7 @@ return {
     {
       "<leader>eg",
       function()
-        require("nvim-tree.api").tree.toggle_gitignore_filter()
+        require("nvim-tree.api").filter.git.ignored.toggle()
       end,
       desc = "Toggle git-ignored files (NvimTree)",
     },
@@ -40,7 +40,7 @@ return {
   config = function()
     require("nvim-tree").setup({
       hijack_directories = {
-        enable = true,   -- open nvim-tree instead of netrw when opening a directory
+        enable = true, -- open nvim-tree instead of netrw when opening a directory
         auto_open = true,
       },
       view = {
@@ -77,6 +77,5 @@ return {
         git_ignored = true,
       },
     })
-
   end,
 }
