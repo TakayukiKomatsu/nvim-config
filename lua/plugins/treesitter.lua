@@ -1,95 +1,112 @@
-return {
-  "nvim-treesitter/nvim-treesitter",
-  event = { "BufReadPre", "BufNewFile" },
-  build = ":TSUpdate",
-  dependencies = {
-    "windwp/nvim-ts-autotag",
-  },
-  config = function()
-    -- configure treesitter
-    local status_ok, configs = pcall(require, "nvim-treesitter.configs")
-    if not status_ok then
-      return
+local extra_parsers = {
+  "bash",
+  "c",
+  "css",
+  "dockerfile",
+  "gitignore",
+  "go",
+  "gomod",
+  "gosum",
+  "gowork",
+  "graphql",
+  "html",
+  "javascript",
+  "json",
+  "lua",
+  "markdown",
+  "markdown_inline",
+  "prisma",
+  "python",
+  "query",
+  "regex",
+  "rust",
+  "toml",
+  "tsx",
+  "typescript",
+  "vim",
+  "vimdoc",
+  "yaml",
+}
+
+local max_treesitter_filesize = 100 * 1024 -- 100 KB
+
+local function extend_unique(list, additions)
+  list = list or {}
+  local seen = {}
+
+  for _, item in ipairs(list) do
+    seen[item] = true
+  end
+
+  for _, item in ipairs(additions) do
+    if not seen[item] then
+      table.insert(list, item)
+      seen[item] = true
     end
+  end
 
-    configs.setup({
-      -- A list of parser names, or "all" (the listed parsers MUST always be installed)
-      ensure_installed = {
-        "json",
-        "javascript",
-        "typescript",
-        "tsx",
-        "yaml",
-        "html",
-        "css",
-        "prisma",
-        "markdown",
-        "markdown_inline",
-        "graphql",
-        "bash",
-        "lua",
-        "vim",
-        "vimdoc",
-        "dockerfile",
-        "gitignore",
-        "query",
-        "regex",
-        "c",
-        "python",
-        "go",
-        "gomod",
-        "gosum",
-        "gowork",
-        "rust",
-        "toml",
-      },
+  return list
+end
 
-      -- Install parsers synchronously (only applied to `ensure_installed`)
-      sync_install = false,
+return {
+  {
+    "nvim-treesitter/nvim-treesitter",
+    opts = function(_, opts)
+      opts.ensure_installed = extend_unique(opts.ensure_installed, extra_parsers)
 
-      -- Deterministic: grow `ensure_installed` above rather than auto-installing on buffer open
-      auto_install = false,
-
-      highlight = {
+      -- LazyVim's nvim-treesitter main-branch config supports disable lists.
+      -- Keep Python/YAML on regex indent because their TS indentation is noisy.
+      opts.indent = vim.tbl_deep_extend("force", opts.indent or {}, {
         enable = true,
-        -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
-        -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
-        -- Using this option may slow down your editor, and you may see some duplicate highlights.
-        -- Instead of true it can also be a list of languages
-        additional_vim_regex_highlighting = false,
-        -- Or use a function for more flexibility, e.g. to disable slow treesitter highlight for large files
-        disable = function(lang, buf)
-          local max_filesize = 100 * 1024 -- 100 KB
-          local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(buf))
-          if ok and stats and stats.size > max_filesize then
-            return true
+        disable = extend_unique(opts.indent and opts.indent.disable or {}, { "python", "yaml" }),
+      })
+
+      opts.highlight = vim.tbl_deep_extend("force", opts.highlight or {}, {
+        enable = true,
+      })
+
+      return opts
+    end,
+    init = function()
+      -- Native nvim-treesitter main no longer supports the old module-style
+      -- `highlight.disable = function(lang, buf)` hook. Stop TS after FileType
+      -- for very large files to preserve the old performance guard.
+      vim.api.nvim_create_autocmd("BufReadPre", {
+        group = vim.api.nvim_create_augroup("UserTreesitterLargeFile", { clear = true }),
+        callback = function(args)
+          local ok, stats = pcall(vim.uv.fs_stat, vim.api.nvim_buf_get_name(args.buf))
+          if ok and stats and stats.size > max_treesitter_filesize then
+            vim.b[args.buf].user_disable_treesitter = true
           end
         end,
-      },
+      })
 
-      -- Enable indentation
-      indent = {
-        enable = true,
-        -- Disable for languages that have poor indentation support
-        disable = { "python", "yaml" },
-      },
+      vim.api.nvim_create_autocmd("FileType", {
+        group = vim.api.nvim_create_augroup("UserTreesitterLargeFileStop", { clear = true }),
+        callback = function(args)
+          if not vim.b[args.buf].user_disable_treesitter then
+            return
+          end
 
-      -- Enable autotagging (w/ nvim-ts-autotag plugin)
-      autotag = {
-        enable = true,
-      },
-      -- Incremental selection based on the named nodes from the grammar
-      incremental_selection = {
-        enable = true,
-        keymaps = {
-          init_selection = "<A-i>", -- Option+I for init selection
-          node_incremental = "<A-i>", -- expand selection
-          scope_incremental = false,
-          node_decremental = "<bs>", -- backspace works well
-          -- Alternative mappings
-          -- init_selection = "<C-space>", -- fallback for muscle memory users
-        },
-      },
-    })
-  end,
+          vim.schedule(function()
+            if vim.api.nvim_buf_is_valid(args.buf) then
+              pcall(vim.treesitter.stop, args.buf)
+            end
+          end)
+        end,
+      })
+
+      -- Native incremental selection mappings. The old nvim-treesitter module
+      -- API is gone on the main branch; Neovim now provides visual-mode node
+      -- selection via `an`/`in`.
+      vim.keymap.set("n", "<A-i>", "van", { desc = "Treesitter select node", remap = true })
+      vim.keymap.set("x", "<A-i>", "an", { desc = "Treesitter expand selection", remap = true })
+      vim.keymap.set("x", "<BS>", "in", { desc = "Treesitter shrink selection", remap = true })
+    end,
+  },
+
+  {
+    "windwp/nvim-ts-autotag",
+    opts = {},
+  },
 }

@@ -108,7 +108,7 @@ return {
     -- refactoring crashes on `async.run` (nil). The two APIs are disjoint
     -- (refactoring uses field access, ufo uses the __call form), so install a
     -- merged proxy that satisfies both regardless of load order.
-    local async_nvim = require("async.nvim")
+    local async_nvim = assert(loadfile(vim.fn.stdpath("data") .. "/lazy/async.nvim/lua/async.lua"))()
     local promise_async = package.loaded["async"]
     if not (type(promise_async) == "table" and promise_async.sync) then
       local ok, pa = pcall(dofile, vim.fn.stdpath("data") .. "/lazy/promise-async/lua/async.lua")
