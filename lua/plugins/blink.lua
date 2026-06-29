@@ -807,7 +807,10 @@ return {
         list = {
           selection = {
             preselect = false,
-            auto_insert = false,
+            -- Cmdline completion should behave like Vim's native wildmenu:
+            -- pressing <Tab> cycles candidates and writes the selected command
+            -- back to the command line before <CR> executes it.
+            auto_insert = true,
           },
         },
 
